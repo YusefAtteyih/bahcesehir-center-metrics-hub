@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import Logo from './Logo';
 
 export const NavigationMenu: React.FC = () => {
   const location = useLocation();
@@ -11,6 +12,10 @@ export const NavigationMenu: React.FC = () => {
   
   return (
     <div className="flex flex-col space-y-4 pt-4">
+      <div className="mb-6 px-2">
+        <Logo size="sm" showText={true} />
+      </div>
+      
       <h2 className="text-lg font-bold mb-2 text-university-blue">Menu</h2>
       
       <Link 

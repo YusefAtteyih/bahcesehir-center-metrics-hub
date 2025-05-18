@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationMenu } from './NavigationMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Logo from './Logo';
 
 const Header: React.FC = () => {
   const isMobile = useIsMobile();
@@ -13,12 +14,9 @@ const Header: React.FC = () => {
   return (
     <header className="bg-university-blue text-white py-4 px-6 flex items-center justify-between shadow-md">
       <div className="flex items-center space-x-4">
-        <img 
-          src="https://www.bau.edu.tr/img/bau-logo-w.svg" 
-          alt="Bahcesehir University Logo" 
-          className="h-10"
-        />
-        <h1 className="text-xl font-bold hidden md:block">Center Performance System</h1>
+        <Link to="/">
+          <Logo size={isMobile ? 'sm' : 'md'} showText={!isMobile} />
+        </Link>
       </div>
       
       {isMobile ? (
