@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Menu } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationMenu } from './NavigationMenu';
@@ -33,10 +34,10 @@ const Header: React.FC = () => {
         </Sheet>
       ) : (
         <nav className="flex items-center space-x-6">
-          <a href="#" className="hover:text-university-orange transition-colors">Dashboard</a>
-          <a href="#" className="hover:text-university-orange transition-colors">Departments</a>
-          <a href="#" className="hover:text-university-orange transition-colors">Reports</a>
-          <a href="#" className="hover:text-university-orange transition-colors">Settings</a>
+          <Link to="/" className="hover:text-university-orange transition-colors">Dashboard</Link>
+          <Link to="/centers" className="hover:text-university-orange transition-colors">Centers</Link>
+          <Link to="#" className="hover:text-university-orange transition-colors">Reports</Link>
+          <Link to="#" className="hover:text-university-orange transition-colors">Settings</Link>
         </nav>
       )}
     </header>
