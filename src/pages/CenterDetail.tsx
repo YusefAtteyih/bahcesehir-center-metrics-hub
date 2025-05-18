@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import { centers } from '@/data/centers';
 import KpiTable from '@/components/KpiTable';
 import KpiCard from '@/components/KpiCard';
-import { ChartBar, TrendingUp, ArrowLeft } from 'lucide-react';
+import { ChartBar, TrendingUp, ArrowLeft, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -55,12 +55,20 @@ const CenterDetailPage: React.FC = () => {
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="mb-6">
-          <Button variant="outline" asChild className="mb-4">
-            <Link to="/centers">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Centers
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button variant="outline" asChild size="sm">
+              <Link to="/centers">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                All Centers
+              </Link>
+            </Button>
+            <Button variant="outline" asChild size="sm">
+              <Link to={`/centers/${center.id}/profile`}>
+                <Info className="mr-2 h-4 w-4" />
+                Center Profile
+              </Link>
+            </Button>
+          </div>
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>

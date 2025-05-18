@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Center } from '@/types/center';
-import { ChartBar, TrendingUp } from 'lucide-react';
+import { ChartBar, TrendingUp, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,9 +64,18 @@ const CenterCard: React.FC<CenterCardProps> = ({ center }) => {
           <span className="ml-1 text-sm">{center.kpis.length} metrics tracked</span>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button asChild variant="outline" className="w-full">
-          <Link to={`/centers/${center.id}`}>View Details</Link>
+      <CardFooter className="flex gap-2">
+        <Button asChild variant="outline" className="w-1/2">
+          <Link to={`/centers/${center.id}`}>
+            <ChartBar className="w-4 h-4 mr-1" />
+            <span>KPIs</span>
+          </Link>
+        </Button>
+        <Button asChild variant="default" className="w-1/2">
+          <Link to={`/centers/${center.id}/profile`}>
+            <Info className="w-4 h-4 mr-1" />
+            <span>Profile</span>
+          </Link>
         </Button>
       </CardFooter>
     </Card>
