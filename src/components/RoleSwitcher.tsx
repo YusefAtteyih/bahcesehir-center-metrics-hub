@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
 import Logo from './Logo';
+import { LayoutDashboard, Settings } from 'lucide-react';
 
 const RoleSwitcher: React.FC = () => {
   const { setUserRole } = useUser();
@@ -12,7 +13,7 @@ const RoleSwitcher: React.FC = () => {
   
   const handleRoleSelection = (role: 'evaluator' | 'manager') => {
     setUserRole(role);
-    navigate('/centers');
+    navigate(role === 'evaluator' ? '/dashboard' : '/my-center');
   };
   
   return (
@@ -31,6 +32,7 @@ const RoleSwitcher: React.FC = () => {
             className="w-full h-20 text-lg justify-start px-4 border-2 hover:border-university-blue hover:text-university-blue"
             onClick={() => handleRoleSelection('evaluator')}
           >
+            <LayoutDashboard className="mr-4 h-6 w-6 text-university-blue" />
             <div className="flex flex-col items-start">
               <span className="font-bold">Evaluator</span>
               <span className="text-sm text-muted-foreground">Monitor and evaluate all centers</span>
@@ -42,6 +44,7 @@ const RoleSwitcher: React.FC = () => {
             className="w-full h-20 text-lg justify-start px-4 border-2 hover:border-university-orange hover:text-university-orange"
             onClick={() => handleRoleSelection('manager')}
           >
+            <Settings className="mr-4 h-6 w-6 text-university-orange" />
             <div className="flex flex-col items-start">
               <span className="font-bold">Center Manager</span>
               <span className="text-sm text-muted-foreground">Monitor your center and submit reports</span>

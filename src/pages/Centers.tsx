@@ -1,13 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
-import Header from '@/components/Header';
 import { centers } from '@/data/centers';
 import CenterCard from '@/components/CenterCard';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ListFilter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useUser } from '@/contexts/UserContext';
 
 const CentersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { userRole } = useUser();
   
   const filteredCenters = useMemo(() => {
     if (!searchQuery.trim()) return centers;
@@ -22,40 +24,44 @@ const CentersPage: React.FC = () => {
   }, [searchQuery]);
 
   return (
-    <div className="min-h-screen bg-university-lightGray flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-university-blue mb-2">University Centers</h1>
-            <p className="text-gray-600">Monitoring and evaluating performance across all centers</p>
-          </div>
-          <div className="mt-4 md:mt-0 w-full md:w-64 relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-university-blue">University Centers</h1>
+          <p className="text-gray-600">
+            {userRole === 'evaluator' 
+              ? 'Monitoring and evaluating performance across all centers' 
+              : 'Browse and compare with other university centers'}
+          </p>
+        </div>
+        <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input 
               placeholder="Search centers..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-9 w-full sm:w-64"
             />
           </div>
+          <Button variant="outline" className="flex items-center gap-2">
+            <ListFilter size={16} />
+            <span>Filter</span>
+          </Button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCenters.map(center => (
-            <CenterCard key={center.id} center={center} />
-          ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCenters.map(center => (
+          <CenterCard key={center.id} center={center} />
+        ))}
+      </div>
+
+      {filteredCenters.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-lg text-gray-600">No centers found matching your search criteria.</p>
         </div>
-
-        {filteredCenters.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">No centers found matching your search criteria.</p>
-          </div>
-        )}
-      </main>
-      <footer className="bg-university-blue text-white p-4 text-center">
-        <p>© {new Date().getFullYear()} Bahcesehir University - Center Performance System</p>
-      </footer>
+      )}
     </div>
   );
 };

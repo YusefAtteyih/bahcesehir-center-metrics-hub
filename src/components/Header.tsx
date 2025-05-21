@@ -1,65 +1,54 @@
 
 import React from 'react';
-import { Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { NavigationMenu } from './NavigationMenu';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useUser } from '@/contexts/UserContext';
-import Logo from './Logo';
+import { 
+  Bell, 
+  User,
+  Search,
+  SidebarTrigger 
+} from 'lucide-react';
+import { Input } from './ui/input';
 
 const Header: React.FC = () => {
-  const isMobile = useIsMobile();
-  const { userRole } = useUser();
+  const { userRole, userName } = useUser();
   
   return (
-    <header className="bg-university-blue text-white py-4 px-6 flex items-center justify-between shadow-md">
-      <div className="flex items-center space-x-4">
-        <Link to="/">
-          <Logo size={isMobile ? 'sm' : 'md'} showText={!isMobile} />
-        </Link>
-        {!isMobile && (
-          <div className="bg-university-orange text-white text-xs px-3 py-1 rounded-full">
-            {userRole === 'evaluator' ? 'Evaluator View' : 'Manager View'}
-          </div>
-        )}
+    <header className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="md:hidden" />
+        
+        <div className="relative max-w-md w-full hidden md:flex">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+          <Input 
+            placeholder="Search..." 
+            className="pl-9 h-9 bg-gray-50 border-gray-200"
+          />
+        </div>
       </div>
-      
-      {isMobile ? (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-white">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <NavigationMenu />
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <nav className="flex items-center space-x-6">
-          <Link to="/centers" className="hover:text-university-orange transition-colors">Centers</Link>
-          
-          {userRole === 'evaluator' ? (
-            <>
-              <Link to="/dashboard" className="hover:text-university-orange transition-colors">Dashboard</Link>
-              <Link to="#" className="hover:text-university-orange transition-colors">Reports</Link>
-            </>
-          ) : (
-            <>
-              <Link to="#" className="hover:text-university-orange transition-colors">Submit Reports</Link>
-              <Link to="#" className="hover:text-university-orange transition-colors">Center Settings</Link>
-            </>
-          )}
-          
-          <Link to="/role-switcher" className="hover:text-university-orange transition-colors">
-            <Button variant="outline" size="sm" className="text-white border-white hover:bg-university-orange hover:text-white">
-              Switch Role
-            </Button>
-          </Link>
-        </nav>
-      )}
+
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-600 hidden md:block">
+          {userRole === 'evaluator' ? 'University Evaluator' : 'Center Manager'}
+        </span>
+        
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1 right-1 h-2 w-2 bg-university-orange rounded-full"></span>
+        </Button>
+        
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 bg-university-blue text-white rounded-full flex items-center justify-center">
+            <User className="h-4 w-4" />
+          </div>
+          <span className="text-sm font-medium hidden md:block">{userName}</span>
+        </div>
+
+        <Link to="/role-switcher" className="text-xs text-university-blue hover:underline hidden sm:block">
+          Switch Role
+        </Link>
+      </div>
     </header>
   );
 };

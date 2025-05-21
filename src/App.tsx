@@ -11,6 +11,13 @@ import CentersPage from "./pages/Centers";
 import CenterDetailPage from "./pages/CenterDetail";
 import CenterProfilePage from "./pages/CenterProfile";
 import RoleSwitcher from "./components/RoleSwitcher";
+import AppLayout from "./components/AppLayout";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import ReportSubmission from "./pages/ReportSubmission";
+import CenterSettings from "./pages/CenterSettings";
+import EvaluatorDashboard from "./pages/EvaluatorDashboard";
+import ReportsHub from "./pages/ReportsHub";
+import ComparisonTool from "./pages/ComparisonTool";
 
 const queryClient = new QueryClient();
 
@@ -22,13 +29,27 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/centers" replace />} />
-            <Route path="/dashboard" element={<Index />} />
-            <Route path="/centers" element={<CentersPage />} />
-            <Route path="/centers/:centerId" element={<CenterDetailPage />} />
-            <Route path="/centers/:centerId/profile" element={<CenterProfilePage />} />
             <Route path="/role-switcher" element={<RoleSwitcher />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            <Route path="/" element={<AppLayout />}>
+              {/* Common routes for both roles */}
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="centers" element={<CentersPage />} />
+              <Route path="centers/:centerId" element={<CenterDetailPage />} />
+              <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
+              
+              {/* Evaluator specific routes */}
+              <Route path="dashboard" element={<EvaluatorDashboard />} />
+              <Route path="reports" element={<ReportsHub />} />
+              <Route path="compare" element={<ComparisonTool />} />
+              
+              {/* Manager specific routes */}
+              <Route path="my-center" element={<ManagerDashboard />} />
+              <Route path="submit-report" element={<ReportSubmission />} />
+              <Route path="center-settings" element={<CenterSettings />} />
+            </Route>
+            
+            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
