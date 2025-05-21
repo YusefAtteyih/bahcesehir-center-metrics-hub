@@ -7,8 +7,9 @@ import {
   Bell, 
   User,
   Search,
-  SidebarTrigger 
+  Menu 
 } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Input } from './ui/input';
 
 const Header: React.FC = () => {

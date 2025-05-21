@@ -1,13 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -22,13 +19,38 @@ import {
   Users, 
   LayoutDashboard, 
   ChartBar, 
-  SquareCheckIcon, 
   Settings,
   ListCheck,
-  ListFilter,
   CircleCheck
 } from 'lucide-react';
 import { Button } from './ui/button';
+
+// Use a simple wrapper that uses the proper interface
+// This fixes the TypeScript errors with defaultOpen prop
+const SidebarGroup: React.FC<React.PropsWithChildren<{defaultOpen?: boolean}>> = ({ 
+  children,
+  defaultOpen
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen || false);
+  
+  return (
+    <div className="flex flex-col space-y-2 py-2">
+      {children}
+    </div>
+  );
+};
+
+const SidebarGroupLabel: React.FC<React.PropsWithChildren> = ({ children }) => {
+  return (
+    <div className="px-3 text-xs font-semibold text-gray-500 uppercase">
+      {children}
+    </div>
+  );
+};
+
+const SidebarGroupContent: React.FC<React.PropsWithChildren> = ({ children }) => {
+  return <div className="space-y-1">{children}</div>;
+};
 
 const AppSidebar: React.FC = () => {
   const { userRole } = useUser();
