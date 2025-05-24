@@ -1,15 +1,17 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { DatePicker } from '@/components/ui/calendar';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, FileText, Calendar, Filter, TrendingUp, Users, Target, Award } from 'lucide-react';
+import { Download, FileText, Calendar as CalendarIcon, Filter, TrendingUp, Users, Target, Award } from 'lucide-react';
 import { useKpiManagement } from '@/hooks/useKpiManagement';
 import { useKpiWorkflow } from '@/hooks/useKpiWorkflow';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ReportConfig {
   type: 'performance' | 'workflow' | 'center' | 'custom';
@@ -30,6 +32,7 @@ const ComprehensiveReports: React.FC = () => {
     filters: {}
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
 
   const { kpiRequests, getRequestStats } = useKpiManagement();
   const { workflowHistory } = useKpiWorkflow();
@@ -181,6 +184,66 @@ const ComprehensiveReports: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {reportConfig.type === 'custom' && (
+            <div className="mt-4 p-4 border rounded-lg space-y-4">
+              <h4 className="font-medium">Custom Filters</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateRange.start && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange.start ? format(dateRange.start, "PPP") : <span>Pick start date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateRange.start}
+                        onSelect={(date) => setDateRange(prev => ({ ...prev, start: date }))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateRange.end && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange.end ? format(dateRange.end, "PPP") : <span>Pick end date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateRange.end}
+                        onSelect={(date) => setDateRange(prev => ({ ...prev, end: date }))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -279,7 +342,7 @@ const ComprehensiveReports: React.FC = () => {
                 <div>
                   <div className="font-medium">{report.name}</div>
                   <div className="text-sm text-gray-600 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
+                    <CalendarIcon className="w-3 h-3" />
                     {report.schedule}
                   </div>
                 </div>
