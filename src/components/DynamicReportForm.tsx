@@ -125,7 +125,7 @@ const DynamicReportForm: React.FC<DynamicReportFormProps> = ({ reportType, onSub
         key={field.name}
         control={form.control}
         name={field.name}
-        render={({ fieldProps }) => (
+        render={({ field: fieldData }) => (
           <FormItem>
             <FormLabel>
               {field.label}
@@ -136,37 +136,37 @@ const DynamicReportForm: React.FC<DynamicReportFormProps> = ({ reportType, onSub
                 <Textarea
                   placeholder={field.placeholder}
                   className="min-h-24"
-                  {...fieldProps}
+                  {...fieldData}
                 />
               )}
               {field.type === 'text' && (
                 <Input
                   placeholder={field.placeholder}
-                  {...fieldProps}
+                  {...fieldData}
                 />
               )}
               {field.type === 'number' && (
                 <Input
                   type="number"
                   placeholder={field.placeholder}
-                  {...fieldProps}
+                  {...fieldData}
                 />
               )}
               {field.type === 'currency' && (
                 <Input
                   type="number"
                   placeholder={field.placeholder}
-                  {...fieldProps}
+                  {...fieldData}
                 />
               )}
               {field.type === 'date' && (
                 <Input
                   type="date"
-                  {...fieldProps}
+                  {...fieldData}
                 />
               )}
               {field.type === 'select' && field.options && (
-                <Select onValueChange={fieldProps.onChange} defaultValue={fieldProps.value}>
+                <Select onValueChange={fieldData.onChange} defaultValue={fieldData.value}>
                   <SelectTrigger>
                     <SelectValue placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`} />
                   </SelectTrigger>
@@ -183,7 +183,7 @@ const DynamicReportForm: React.FC<DynamicReportFormProps> = ({ reportType, onSub
                 <Input
                   type="file"
                   multiple
-                  {...fieldProps}
+                  onChange={(e) => fieldData.onChange(e.target.files)}
                 />
               )}
             </FormControl>
