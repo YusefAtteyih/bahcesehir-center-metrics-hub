@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,8 @@ import ReportsHub from "./pages/ReportsHub";
 import ComparisonTool from "./pages/ComparisonTool";
 import ReportReview from "./pages/ReportReview";
 import KpiApprovals from "./pages/KpiApprovals";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import IntegratedDashboard from "./pages/IntegratedDashboard";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,8 @@ const App = () => (
               <Route path="reports/:reportId/review" element={<ReportReview />} />
               <Route path="kpi-approvals" element={<KpiApprovals />} />
               <Route path="compare" element={<ComparisonTool />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="integrated-dashboard" element={<IntegratedDashboard />} />
               
               {/* Manager specific routes */}
               <Route path="my-center" element={<ManagerDashboard />} />
