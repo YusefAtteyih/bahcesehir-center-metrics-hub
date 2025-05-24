@@ -156,6 +156,7 @@ export const useKpiWorkflow = () => {
     executeWorkflowAction,
     getWorkflowHistory,
     getStateInfo,
+    workflowHistory,
     workflowStates: KPI_WORKFLOW_STATES,
     workflowTransitions: KPI_WORKFLOW_TRANSITIONS
   };
