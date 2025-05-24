@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
@@ -9,8 +8,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import TeamMemberModal from '@/components/TeamMemberModal';
+import { Trash2 } from 'lucide-react';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+}
 
 const CenterSettings: React.FC = () => {
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    { id: '1', name: "Dr. Ahmet Yılmaz", role: "Center Director", email: "ahmet.yilmaz@bau.edu.tr", phone: "+90 212 123 4567" },
+    { id: '2', name: "Dr. Ayşe Kaya", role: "Research Coordinator", email: "ayse.kaya@bau.edu.tr" },
+    { id: '3', name: "Mehmet Demir", role: "Industry Liaison", email: "mehmet.demir@bau.edu.tr" },
+    { id: '4', name: "Zeynep Özturk", role: "Project Manager", email: "zeynep.ozturk@bau.edu.tr" }
+  ]);
+
   const profileForm = useForm({
     defaultValues: {
       name: 'Business Analytics and Insights Center',
@@ -43,6 +59,25 @@ const CenterSettings: React.FC = () => {
     });
   };
 
+  const handleSaveTeamMember = (member: TeamMember) => {
+    setTeamMembers(prev => {
+      const existing = prev.find(m => m.id === member.id);
+      if (existing) {
+        return prev.map(m => m.id === member.id ? member : m);
+      } else {
+        return [...prev, member];
+      }
+    });
+  };
+
+  const handleDeleteTeamMember = (id: string) => {
+    setTeamMembers(prev => prev.filter(m => m.id !== id));
+    toast({
+      title: "Team Member Removed",
+      description: "The team member has been removed successfully.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -68,6 +103,7 @@ const CenterSettings: React.FC = () => {
             <CardContent>
               <Form {...profileForm}>
                 <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-6">
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={profileForm.control}
@@ -182,6 +218,7 @@ const CenterSettings: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="kpis">
+          
           <Card>
             <CardHeader>
               <CardTitle>KPI Management</CardTitle>
@@ -242,7 +279,7 @@ const CenterSettings: React.FC = () => {
                   <CardTitle>Team Members</CardTitle>
                   <CardDescription>Manage your center's team</CardDescription>
                 </div>
-                <Button>Add Team Member</Button>
+                <TeamMemberModal onSave={handleSaveTeamMember} />
               </div>
             </CardHeader>
             <CardContent>
@@ -252,22 +289,28 @@ const CenterSettings: React.FC = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[
-                    { name: "Dr. Ahmet Yılmaz", role: "Center Director", email: "ahmet.yilmaz@bau.edu.tr" },
-                    { name: "Dr. Ayşe Kaya", role: "Research Coordinator", email: "ayse.kaya@bau.edu.tr" },
-                    { name: "Mehmet Demir", role: "Industry Liaison", email: "mehmet.demir@bau.edu.tr" },
-                    { name: "Zeynep Özturk", role: "Project Manager", email: "zeynep.ozturk@bau.edu.tr" }
-                  ].map((member, index) => (
-                    <TableRow key={index}>
+                  {teamMembers.map((member) => (
+                    <TableRow key={member.id}>
                       <TableCell className="font-medium">{member.name}</TableCell>
                       <TableCell>{member.role}</TableCell>
                       <TableCell>{member.email}</TableCell>
+                      <TableCell>{member.phone || '-'}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Edit</Button>
+                        <div className="flex justify-end gap-1">
+                          <TeamMemberModal member={member} onSave={handleSaveTeamMember} />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteTeamMember(member.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

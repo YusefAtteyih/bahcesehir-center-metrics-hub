@@ -18,6 +18,7 @@ import CenterSettings from "./pages/CenterSettings";
 import EvaluatorDashboard from "./pages/EvaluatorDashboard";
 import ReportsHub from "./pages/ReportsHub";
 import ComparisonTool from "./pages/ComparisonTool";
+import ReportReview from "./pages/ReportReview";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
               {/* Evaluator specific routes */}
               <Route path="dashboard" element={<EvaluatorDashboard />} />
               <Route path="reports" element={<ReportsHub />} />
+              <Route path="reports/:reportId/review" element={<ReportReview />} />
               <Route path="compare" element={<ComparisonTool />} />
               
               {/* Manager specific routes */}
