@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,7 +37,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
   };
 
   const getCategoryBreakdown = () => {
-    const categories = kpis.reduce((acc, kpi) => {
+    const categories = kpis.reduce((acc: Record<string, { total: number; onTarget: number }>, kpi) => {
       const category = kpi.category || 'Uncategorized';
       if (!acc[category]) {
         acc[category] = { total: 0, onTarget: 0 };
@@ -48,7 +47,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
         acc[category].onTarget++;
       }
       return acc;
-    }, {} as Record<string, { total: number; onTarget: number }>);
+    }, {});
 
     return Object.entries(categories).map(([category, data]) => ({
       category,

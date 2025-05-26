@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -311,7 +310,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ kpis, centers, reques
                 <Checkbox 
                   id="includeCharts"
                   checked={includeCharts}
-                  onCheckedChange={setIncludeCharts}
+                  onCheckedChange={(checked) => setIncludeCharts(checked === true)}
                 />
                 <Label htmlFor="includeCharts">Include charts and visualizations</Label>
               </div>
@@ -320,7 +319,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ kpis, centers, reques
                 <Checkbox 
                   id="includeRecommendations"
                   checked={includeRecommendations}
-                  onCheckedChange={setIncludeRecommendations}
+                  onCheckedChange={(checked) => setIncludeRecommendations(checked === true)}
                 />
                 <Label htmlFor="includeRecommendations">Include recommendations</Label>
               </div>
@@ -329,7 +328,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ kpis, centers, reques
                 <Checkbox 
                   id="scheduleReport"
                   checked={scheduleReport}
-                  onCheckedChange={setScheduleReport}
+                  onCheckedChange={(checked) => setScheduleReport(checked === true)}
                 />
                 <Label htmlFor="scheduleReport">Schedule recurring reports</Label>
               </div>
