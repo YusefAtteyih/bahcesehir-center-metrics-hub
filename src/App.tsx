@@ -22,6 +22,7 @@ import ReportReview from "./pages/ReportReview";
 import KpiApprovals from "./pages/KpiApprovals";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import IntegratedDashboard from "./pages/IntegratedDashboard";
+import KpiManagement from "./pages/KpiManagement";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const AppRoutes = () => {
             <Route path="reports" element={<ReportsHub />} />
             <Route path="reports/:reportId/review" element={<ReportReview />} />
             <Route path="kpi-approvals" element={<KpiApprovals />} />
+            <Route path="kpi-management" element={<KpiManagement />} />
             <Route path="compare" element={<ComparisonTool />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="integrated-dashboard" element={<IntegratedDashboard />} />
