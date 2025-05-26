@@ -305,6 +305,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_user_profile: {
+        Args: {
+          user_id: string
+          user_email: string
+          user_full_name: string
+          user_role?: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: boolean
+      }
       get_user_managed_center: {
         Args: { user_id?: string }
         Returns: string
