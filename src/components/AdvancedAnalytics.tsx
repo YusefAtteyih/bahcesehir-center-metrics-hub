@@ -49,7 +49,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
       return acc;
     }, {});
 
-    return Object.entries(categories).map(([category, data]) => ({
+    return Object.entries(categories).map(([category, data]: [string, { total: number; onTarget: number }]) => ({
       category,
       total: data.total,
       onTarget: data.onTarget,
