@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import IntegratedDashboard from "./pages/IntegratedDashboard";
 import KpiManagement from "./pages/KpiManagement";
 import AdvancedAnalyticsPage from "./pages/AdvancedAnalyticsPage";
 import ReportGeneratorPage from "./pages/ReportGeneratorPage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -51,17 +51,19 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<AppLayout />}>
-        {/* Common routes for both roles */}
+        {/* Default route - redirect to dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="centers" element={<CentersPage />} />
-        <Route path="centers/:centerId" element={<CenterDetailPage />} />
-        <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
         
-        {/* Role-based dashboard routing */}
+        {/* Unified dashboard route for both roles */}
         <Route 
           path="dashboard" 
           element={userRole === 'evaluator' ? <EvaluatorDashboard /> : <ManagerDashboard />} 
         />
+        
+        {/* Common routes for both roles */}
+        <Route path="centers" element={<CentersPage />} />
+        <Route path="centers/:centerId" element={<CenterDetailPage />} />
+        <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
         
         {/* Evaluator specific routes */}
         {userRole === 'evaluator' && (
@@ -81,11 +83,15 @@ const AppRoutes = () => {
         {/* Manager specific routes */}
         {userRole === 'manager' && (
           <>
-            <Route path="my-center" element={<ManagerDashboard />} />
+            {/* Redirect old my-center route to dashboard */}
+            <Route path="my-center" element={<Navigate to="/dashboard" replace />} />
             <Route path="submit-report" element={<ReportSubmission />} />
             <Route path="center-settings" element={<CenterSettings />} />
           </>
         )}
+        
+        {/* User profile route for both roles */}
+        <Route path="profile" element={<UserProfilePage />} />
       </Route>
       
       {/* Catch-all route */}

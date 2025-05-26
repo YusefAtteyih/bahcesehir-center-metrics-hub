@@ -4,11 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import KpiCard from '@/components/KpiCard';
 import KpiChart from '@/components/KpiChart';
 import PerformanceAnalytics from '@/components/PerformanceAnalytics';
-import { ChartBar, Users, ListCheck, CircleCheck } from 'lucide-react';
+import { ChartBar, Users, ListCheck, CircleCheck, TrendingUp } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { KPI } from '@/types/center';
 
 const EvaluatorDashboard: React.FC = () => {
+  const { profile } = useAuth();
+  
   // Sample KPI data for the charts
   const universityKpis: KPI[] = [
     {
@@ -99,11 +104,34 @@ const EvaluatorDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-university-blue">University Centers Dashboard</h1>
-        <p className="text-gray-600 mt-1">Comprehensive performance overview with advanced analytics</p>
+      {/* Personalized Header */}
+      <div className="bg-gradient-to-r from-university-blue to-university-blue/80 text-white rounded-lg p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Welcome back, {profile?.full_name}</h1>
+            <p className="text-blue-100 mt-1">University Centers Evaluation Dashboard</p>
+            <p className="text-blue-200 text-sm mt-1">
+              Comprehensive performance overview with advanced analytics
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" asChild>
+              <Link to="/reports">
+                <ListCheck className="h-4 w-4 mr-2" />
+                View Reports
+              </Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link to="/compare">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Compare Centers
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
 
+      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Total Centers"
@@ -139,6 +167,7 @@ const EvaluatorDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Charts and Analytics */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <KpiChart 
           kpis={universityKpis}
@@ -153,6 +182,7 @@ const EvaluatorDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="col-span-1 lg:col-span-2">
           <CardHeader>
@@ -173,6 +203,11 @@ const EvaluatorDashboard: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+            <div className="mt-6">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/analytics">View Detailed Analytics</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -198,9 +233,50 @@ const EvaluatorDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+            <div className="mt-4">
+              <Button variant="outline" size="sm" asChild className="w-full">
+                <Link to="/reports">View All Reports</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Frequently used evaluation tools</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button variant="outline" asChild className="h-20 flex-col">
+              <Link to="/kpi-approvals">
+                <CircleCheck className="h-6 w-6 mb-2" />
+                <span>KPI Approvals</span>
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="h-20 flex-col">
+              <Link to="/compare">
+                <ChartBar className="h-6 w-6 mb-2" />
+                <span>Compare Centers</span>
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="h-20 flex-col">
+              <Link to="/analytics">
+                <TrendingUp className="h-6 w-6 mb-2" />
+                <span>Analytics</span>
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="h-20 flex-col">
+              <Link to="/report-generator">
+                <ListCheck className="h-6 w-6 mb-2" />
+                <span>Generate Reports</span>
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

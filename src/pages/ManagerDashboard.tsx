@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import KpiCard from '@/components/KpiCard';
 import KpiChart from '@/components/KpiChart';
-import { ChartBar, CalendarClock, CircleCheck, ListCheck } from 'lucide-react';
+import { ChartBar, CalendarClock, CircleCheck, ListCheck, User } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -23,8 +23,14 @@ const ManagerDashboard: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-gray-600 mb-4">No Center Assigned</h1>
-          <p className="text-gray-500">Please contact an administrator to assign you to a center.</p>
+          <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="h-8 w-8 text-gray-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-600 mb-2">No Center Assigned</h1>
+          <p className="text-gray-500 mb-4">Please contact an administrator to assign you to a center.</p>
+          <Button variant="outline" asChild>
+            <Link to="/centers">Browse Centers</Link>
+          </Button>
         </div>
       </div>
     );
@@ -33,7 +39,10 @@ const ManagerDashboard: React.FC = () => {
   if (centerLoading || kpisLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-12 w-96" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-96" />
+          <Skeleton className="h-4 w-64" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
@@ -57,18 +66,27 @@ const ManagerDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-university-blue">
-            {center?.name || 'My Center'} Dashboard
-          </h1>
-          <p className="text-gray-600 mt-1">Welcome back, {profile?.full_name}</p>
+      {/* Personalized Header */}
+      <div className="bg-gradient-to-r from-university-blue to-university-blue/80 text-white rounded-lg p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Welcome back, {profile?.full_name}
+            </h1>
+            <p className="text-blue-100 mt-1">
+              Managing {center?.name || 'Your Center'} • {center?.short_name}
+            </p>
+            <p className="text-blue-200 text-sm mt-1">
+              {center?.location && `Located in ${center.location}`}
+            </p>
+          </div>
+          <Button variant="secondary" asChild>
+            <Link to="/submit-report">Submit New Report</Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link to="/submit-report">Submit New Report</Link>
-        </Button>
       </div>
 
+      {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Overall Performance"
@@ -104,6 +122,7 @@ const ManagerDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Charts and Activity */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {centerKpis.length > 0 && (
           <KpiChart 
@@ -123,7 +142,7 @@ const ManagerDashboard: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest KPI update requests</CardDescription>
+            <CardDescription>Your latest KPI update requests</CardDescription>
           </CardHeader>
           <CardContent>
             {requestsLoading ? (
@@ -152,20 +171,27 @@ const ManagerDashboard: React.FC = () => {
                     </div>
                   </div>
                 ))}
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link to="/submit-report">View All Requests</Link>
+                </Button>
               </div>
             ) : (
               <div className="text-center text-gray-500 py-4">
-                No requests submitted yet
+                <p>No requests submitted yet</p>
+                <Button variant="outline" size="sm" asChild className="mt-2">
+                  <Link to="/submit-report">Submit Your First Report</Link>
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
+      {/* Detailed KPI Performance */}
       <Card>
         <CardHeader>
           <CardTitle>KPI Performance Details</CardTitle>
-          <CardDescription>Current performance against targets</CardDescription>
+          <CardDescription>Current performance against your center's targets</CardDescription>
         </CardHeader>
         <CardContent>
           {centerKpis.length > 0 ? (
@@ -200,15 +226,25 @@ const ManagerDashboard: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-500 py-4">
-              No KPIs configured for this center
+            <div className="text-center text-gray-500 py-8">
+              <ChartBar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="font-medium mb-2">No KPIs configured</p>
+              <p className="text-sm mb-4">Your center doesn't have any KPIs set up yet.</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/center-settings">Configure KPIs</Link>
+              </Button>
             </div>
           )}
-          <div className="mt-6">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/center-settings">Update KPI Values</Link>
-            </Button>
-          </div>
+          {centerKpis.length > 0 && (
+            <div className="mt-6 flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/center-settings">Update KPI Values</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/submit-report">Submit New Report</Link>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

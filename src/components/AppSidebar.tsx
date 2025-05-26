@@ -14,6 +14,7 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/hooks/useAuth';
 import Logo from './Logo';
 import { 
   Users, 
@@ -21,12 +22,14 @@ import {
   ChartBar, 
   Settings,
   ListCheck,
-  CircleCheck
+  CircleCheck,
+  LogOut,
+  User
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { toast } from '@/hooks/use-toast';
 
 // Use a simple wrapper that uses the proper interface
-// This fixes the TypeScript errors with defaultOpen prop
 const SidebarGroup: React.FC<React.PropsWithChildren<{defaultOpen?: boolean}>> = ({ 
   children,
   defaultOpen
@@ -53,10 +56,27 @@ const SidebarGroupContent: React.FC<React.PropsWithChildren> = ({ children }) =>
 };
 
 const AppSidebar: React.FC = () => {
-  const { userRole } = useUser();
+  const { userRole, userName } = useUser();
+  const { signOut, profile } = useAuth();
   const location = useLocation();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Sign Out Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out successfully."
+      });
+    }
+  };
   
   // Helper to determine if a route is active
   const isActive = (path: string) => {
@@ -79,16 +99,45 @@ const AppSidebar: React.FC = () => {
       </SidebarHeader>
       
       <SidebarContent>
-        {/* Common navigation items for all roles */}
+        {/* User Info Section */}
+        {!isCollapsed && (
+          <SidebarGroup defaultOpen>
+            <SidebarGroupContent>
+              <div className="px-3 py-2 bg-gray-50 rounded-md mx-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 bg-university-blue text-white rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{userName}</p>
+                    <p className="text-xs text-gray-500">
+                      {userRole === 'evaluator' ? 'University Evaluator' : 'Center Manager'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Navigation */}
         <SidebarGroup defaultOpen>
-          <SidebarGroupLabel>Centers</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
+                  <NavLink to="/dashboard" className="flex items-center gap-3">
+                    <LayoutDashboard size={18} />
+                    {!isCollapsed && <span>Dashboard</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive('/centers')}>
                   <NavLink to="/centers" className="flex items-center gap-3">
                     <Users size={18} />
-                    {!isCollapsed && <span>All Centers</span>}
+                    {!isCollapsed && <span>Centers</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -96,20 +145,12 @@ const AppSidebar: React.FC = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Evaluator-specific navigation items */}
+        {/* Role-specific navigation */}
         {userRole === 'evaluator' && (
           <SidebarGroup defaultOpen>
             <SidebarGroupLabel>Evaluation Tools</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
-                    <NavLink to="/dashboard" className="flex items-center gap-3">
-                      <LayoutDashboard size={18} />
-                      {!isCollapsed && <span>Dashboard</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/reports')}>
                     <NavLink to="/reports" className="flex items-center gap-3">
@@ -126,25 +167,24 @@ const AppSidebar: React.FC = () => {
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/kpi-approvals')}>
+                    <NavLink to="/kpi-approvals" className="flex items-center gap-3">
+                      <CircleCheck size={18} />
+                      {!isCollapsed && <span>KPI Approvals</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
 
-        {/* Manager-specific navigation items */}
         {userRole === 'manager' && (
           <SidebarGroup defaultOpen>
-            <SidebarGroupLabel>My Center</SidebarGroupLabel>
+            <SidebarGroupLabel>Center Management</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/my-center')}>
-                    <NavLink to="/my-center" className="flex items-center gap-3">
-                      <LayoutDashboard size={18} />
-                      {!isCollapsed && <span>Center Dashboard</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/submit-report')}>
                     <NavLink to="/submit-report" className="flex items-center gap-3">
@@ -168,9 +208,27 @@ const AppSidebar: React.FC = () => {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="p-4">
-          <Button asChild variant="outline" size="sm" className="w-full">
-            <NavLink to="/role-switcher">Switch Role</NavLink>
+        <div className="p-4 space-y-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start"
+            asChild
+          >
+            <NavLink to="/profile">
+              <User className="h-4 w-4 mr-2" />
+              {!isCollapsed && "Profile"}
+            </NavLink>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start" 
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            {!isCollapsed && "Sign Out"}
           </Button>
         </div>
       </SidebarFooter>
