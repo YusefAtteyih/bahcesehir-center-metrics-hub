@@ -7,54 +7,62 @@ import { ChartBar, CalendarClock, CircleCheck, ListCheck } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
-import { KPI } from '@/types/center';
+import { useAuth } from '@/hooks/useAuth';
+import { useCenterKpis, useCenter, useKpiRequests } from '@/hooks/useSupabaseData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ManagerDashboard: React.FC = () => {
-  const { userName } = useUser();
+  const { profile } = useAuth();
+  const managedCenterId = profile?.managed_center_id;
   
-  // Sample KPI data for manager's center
-  const centerKpis: KPI[] = [
-    {
-      name: "Research Publications",
-      value: 24,
-      target: 30,
-      unit: "papers",
-      whyItMatters: "Demonstrates research output quality",
-      measurement: "Published papers in peer-reviewed journals"
-    },
-    {
-      name: "Industry Partnerships",
-      value: 8,
-      target: 10,
-      unit: "partnerships",
-      whyItMatters: "Shows industry engagement",
-      measurement: "Active partnership agreements"
-    },
-    {
-      name: "Student Engagement",
-      value: 450,
-      target: 500,
-      unit: "students",
-      whyItMatters: "Measures educational impact",
-      measurement: "Students participating in center activities"
-    },
-    {
-      name: "Funding Secured",
-      value: 350000,
-      target: 400000,
-      unit: "₺",
-      whyItMatters: "Financial sustainability",
-      measurement: "Total funding secured annually"
-    }
-  ];
+  const { data: center, isLoading: centerLoading } = useCenter(managedCenterId || '');
+  const { data: kpis, isLoading: kpisLoading } = useCenterKpis(managedCenterId || '');
+  const { data: requests, isLoading: requestsLoading } = useKpiRequests();
   
+  if (!managedCenterId) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold text-gray-600 mb-4">No Center Assigned</h1>
+          <p className="text-gray-500">Please contact an administrator to assign you to a center.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (centerLoading || kpisLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-96" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const centerKpis = kpis || [];
+  const centerRequests = requests?.filter(r => r.center_id === managedCenterId) || [];
+  const pendingRequests = centerRequests.filter(r => ['draft', 'submitted', 'under-review'].includes(r.status));
+  
+  // Calculate overall performance
+  const overallPerformance = centerKpis.length > 0 
+    ? Math.round(centerKpis.reduce((acc, kpi) => acc + (Number(kpi.current_value) / Number(kpi.target_value)) * 100, 0) / centerKpis.length)
+    : 0;
+  
+  const kpisOnTarget = centerKpis.filter(kpi => Number(kpi.current_value) >= Number(kpi.target_value) * 0.9).length;
+  const submittedReports = centerRequests.filter(r => r.status !== 'draft').length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-university-blue">My Center Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back, {userName}</p>
+          <h1 className="text-3xl font-bold text-university-blue">
+            {center?.name || 'My Center'} Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">Welcome back, {profile?.full_name}</p>
         </div>
         <Button asChild>
           <Link to="/submit-report">Submit New Report</Link>
@@ -64,7 +72,7 @@ const ManagerDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Overall Performance"
-          value={83}
+          value={overallPerformance}
           target={100}
           unit="%"
           icon={<ChartBar size={18} />}
@@ -72,98 +80,130 @@ const ManagerDashboard: React.FC = () => {
         />
         <KpiCard 
           title="KPIs On Target"
-          value={16}
-          target={20}
+          value={kpisOnTarget}
+          target={centerKpis.length}
           unit="KPIs"
           icon={<CircleCheck size={18} />}
           color="green-500"
         />
         <KpiCard 
           title="Reports Submitted"
-          value={3}
-          target={4}
+          value={submittedReports}
+          target={centerKpis.length}
           unit="reports"
           icon={<ListCheck size={18} />}
           color="university-orange"
         />
         <KpiCard 
-          title="Days to Next Report"
-          value={12}
-          target={30}
-          unit="days"
+          title="Pending Requests"
+          value={pendingRequests.length}
+          target={0}
+          unit="requests"
           icon={<CalendarClock size={18} />}
           color="purple-500"
         />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <KpiChart 
-          kpis={centerKpis}
-          title="My Center KPI Performance"
-          showTrends={true}
-        />
+        {centerKpis.length > 0 && (
+          <KpiChart 
+            kpis={centerKpis.map(kpi => ({
+              name: kpi.name,
+              value: Number(kpi.current_value),
+              target: Number(kpi.target_value),
+              unit: kpi.unit || '',
+              whyItMatters: kpi.why_it_matters || '',
+              measurement: kpi.measurement || ''
+            }))}
+            title={`${center?.short_name || 'Center'} KPI Performance`}
+            showTrends={true}
+          />
+        )}
 
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Deadlines</CardTitle>
-            <CardDescription>Reports and submissions due</CardDescription>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest KPI update requests</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { task: "Quarterly Report Q2", due: "July 15, 2025", urgent: true },
-                { task: "KPI Update - Research", due: "July 20, 2025", urgent: false },
-                { task: "Annual Budget Submission", due: "August 5, 2025", urgent: false },
-                { task: "Team Member Updates", due: "August 12, 2025", urgent: false }
-              ].map((deadline, index) => (
-                <div key={index} className={`p-3 rounded-md ${deadline.urgent ? 'bg-red-50 border border-red-100' : 'bg-gray-50 border border-gray-100'}`}>
-                  <div className={`font-medium ${deadline.urgent ? 'text-red-600' : 'text-gray-800'}`}>{deadline.task}</div>
-                  <div className={`text-sm ${deadline.urgent ? 'text-red-500' : 'text-gray-500'}`}>Due: {deadline.due}</div>
-                </div>
-              ))}
-            </div>
+            {requestsLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-12" />
+                ))}
+              </div>
+            ) : centerRequests.length > 0 ? (
+              <div className="space-y-4">
+                {centerRequests.slice(0, 5).map((request) => (
+                  <div key={request.id} className="p-3 rounded-md bg-gray-50 border border-gray-100">
+                    <div className="font-medium">{request.kpi_name}</div>
+                    <div className="text-sm text-gray-500">
+                      Status: <span className={`font-medium ${
+                        request.status === 'approved' ? 'text-green-600' :
+                        request.status === 'rejected' ? 'text-red-600' :
+                        request.status === 'under-review' ? 'text-blue-600' :
+                        'text-yellow-600'
+                      }`}>
+                        {request.status.replace('-', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(request.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                No requests submitted yet
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>KPI Details</CardTitle>
-          <CardDescription>Current performance against targets with action items</CardDescription>
+          <CardTitle>KPI Performance Details</CardTitle>
+          <CardDescription>Current performance against targets</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[
-              { name: "Research Publications", value: 24, target: 30, status: "on-track" },
-              { name: "Industry Partnerships", value: 8, target: 10, status: "at-risk" },
-              { name: "Student Engagement", value: 450, target: 500, status: "on-track" },
-              { name: "Funding Secured", value: 350000, target: 400000, status: "needs-attention" },
-              { name: "Events Organized", value: 15, target: 15, status: "completed" }
-            ].map(kpi => (
-              <div key={kpi.name} className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">{kpi.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
-                      {kpi.value.toLocaleString()} / {kpi.target.toLocaleString()} ({Math.floor(kpi.value/kpi.target*100)}%)
-                    </span>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      kpi.status === 'completed' ? 'bg-green-100 text-green-700' :
-                      kpi.status === 'on-track' ? 'bg-blue-100 text-blue-700' :
-                      kpi.status === 'at-risk' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {kpi.status.replace('-', ' ')}
-                    </span>
+          {centerKpis.length > 0 ? (
+            <div className="space-y-4">
+              {centerKpis.map(kpi => {
+                const progress = Math.min((Number(kpi.current_value) / Number(kpi.target_value)) * 100, 100);
+                const status = progress >= 100 ? 'completed' : 
+                             progress >= 90 ? 'on-track' : 
+                             progress >= 70 ? 'at-risk' : 'needs-attention';
+                
+                return (
+                  <div key={kpi.id} className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">{kpi.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          {Number(kpi.current_value).toLocaleString()} / {Number(kpi.target_value).toLocaleString()} {kpi.unit} ({Math.floor(progress)}%)
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          status === 'completed' ? 'bg-green-100 text-green-700' :
+                          status === 'on-track' ? 'bg-blue-100 text-blue-700' :
+                          status === 'at-risk' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {status.replace('-', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    <Progress value={progress} className="h-2" />
                   </div>
-                </div>
-                <Progress 
-                  value={Math.min(kpi.value/kpi.target*100, 100)} 
-                  className="h-2" 
-                />
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-4">
+              No KPIs configured for this center
+            </div>
+          )}
           <div className="mt-6">
             <Button variant="outline" size="sm" asChild>
               <Link to="/center-settings">Update KPI Values</Link>

@@ -1,46 +1,43 @@
-// This file is deprecated - authentication is now handled by Supabase
-// The useAuth hook should be used instead
 
 import React, { createContext, useContext, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
-// Keep minimal interface for backward compatibility during transition
 interface UserContextType {
-  userRole: 'evaluator' | 'manager';
-  setUserRole: (role: 'evaluator' | 'manager') => void;
-  managedCenterId?: string;
-  setManagedCenterId: (id?: string) => void;
-  isAuthenticated: boolean;
   userName: string;
-  userEmail: string;
+  userRole: 'evaluator' | 'manager' | undefined;
+  managedCenterId: string | undefined;
+  isAuthenticated: boolean;
+  loading: boolean;
 }
 
-const UserContext = createContext<UserContextType>({
-  userRole: 'evaluator',
-  setUserRole: () => {},
-  setManagedCenterId: () => {},
-  isAuthenticated: false,
-  userName: '',
-  userEmail: '',
-});
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  // This is now a stub - real authentication state comes from useAuth hook
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
+
+interface UserProviderProps {
+  children: ReactNode;
+}
+
+export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+  const { profile, isAuthenticated, loading } = useAuth();
+
+  const value: UserContextType = {
+    userName: profile?.full_name || 'User',
+    userRole: profile?.role,
+    managedCenterId: profile?.managed_center_id || undefined,
+    isAuthenticated,
+    loading
+  };
+
   return (
-    <UserContext.Provider value={{
-      userRole: 'evaluator',
-      setUserRole: () => {},
-      managedCenterId: undefined,
-      setManagedCenterId: () => {},
-      isAuthenticated: false,
-      userName: '',
-      userEmail: '',
-    }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
-}
-
-export function useUser() {
-  console.warn('useUser is deprecated. Use useAuth hook instead.');
-  return useContext(UserContext);
-}
+};
