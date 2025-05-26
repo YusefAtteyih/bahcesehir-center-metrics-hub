@@ -191,7 +191,16 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const currentError = error || localError;
+  // Fix the type error by properly extracting the error message
+  const getErrorMessage = () => {
+    if (localError) return localError;
+    if (error) {
+      return typeof error === 'string' ? error : error.message;
+    }
+    return null;
+  };
+
+  const currentError = getErrorMessage();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-university-lightGray px-4">
