@@ -4,14 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { UserProvider } from "./contexts/UserContext";
-import Index from "./pages/Index";
+import AuthGuard from "./components/AuthGuard";
+import { useAuth } from "./hooks/useAuth";
+import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 import CentersPage from "./pages/Centers";
 import CenterDetailPage from "./pages/CenterDetail";
 import CenterProfilePage from "./pages/CenterProfile";
-import RoleSwitcher from "./components/RoleSwitcher";
-import AppLayout from "./components/AppLayout";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import ReportSubmission from "./pages/ReportSubmission";
 import CenterSettings from "./pages/CenterSettings";
@@ -25,43 +24,62 @@ import IntegratedDashboard from "./pages/IntegratedDashboard";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => {
+  const { userRole } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/" element={<AppLayout />}>
+        {/* Common routes for both roles */}
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="centers" element={<CentersPage />} />
+        <Route path="centers/:centerId" element={<CenterDetailPage />} />
+        <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
+        
+        {/* Role-based dashboard routing */}
+        <Route 
+          path="dashboard" 
+          element={userRole === 'evaluator' ? <EvaluatorDashboard /> : <ManagerDashboard />} 
+        />
+        
+        {/* Evaluator specific routes */}
+        {userRole === 'evaluator' && (
+          <>
+            <Route path="reports" element={<ReportsHub />} />
+            <Route path="reports/:reportId/review" element={<ReportReview />} />
+            <Route path="kpi-approvals" element={<KpiApprovals />} />
+            <Route path="compare" element={<ComparisonTool />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="integrated-dashboard" element={<IntegratedDashboard />} />
+          </>
+        )}
+        
+        {/* Manager specific routes */}
+        {userRole === 'manager' && (
+          <>
+            <Route path="my-center" element={<ManagerDashboard />} />
+            <Route path="submit-report" element={<ReportSubmission />} />
+            <Route path="center-settings" element={<CenterSettings />} />
+          </>
+        )}
+      </Route>
+      
+      {/* Catch-all route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <UserProvider>
+      <AuthGuard>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/role-switcher" element={<RoleSwitcher />} />
-            
-            <Route path="/" element={<AppLayout />}>
-              {/* Common routes for both roles */}
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="centers" element={<CentersPage />} />
-              <Route path="centers/:centerId" element={<CenterDetailPage />} />
-              <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
-              
-              {/* Evaluator specific routes */}
-              <Route path="dashboard" element={<EvaluatorDashboard />} />
-              <Route path="reports" element={<ReportsHub />} />
-              <Route path="reports/:reportId/review" element={<ReportReview />} />
-              <Route path="kpi-approvals" element={<KpiApprovals />} />
-              <Route path="compare" element={<ComparisonTool />} />
-              <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="integrated-dashboard" element={<IntegratedDashboard />} />
-              
-              {/* Manager specific routes */}
-              <Route path="my-center" element={<ManagerDashboard />} />
-              <Route path="submit-report" element={<ReportSubmission />} />
-              <Route path="center-settings" element={<CenterSettings />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </BrowserRouter>
-      </UserProvider>
+      </AuthGuard>
     </TooltipProvider>
   </QueryClientProvider>
 );

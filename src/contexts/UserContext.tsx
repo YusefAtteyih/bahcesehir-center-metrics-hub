@@ -1,63 +1,39 @@
+// This file is deprecated - authentication is now handled by Supabase
+// The useAuth hook should be used instead
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { toast } from "@/hooks/use-toast";
+import React, { createContext, useContext, ReactNode } from 'react';
 
-export type UserRole = 'evaluator' | 'manager';
-
+// Keep minimal interface for backward compatibility during transition
 interface UserContextType {
-  userRole: UserRole;
-  setUserRole: (role: UserRole) => void;
-  managedCenterId?: string; // For manager role
+  userRole: 'evaluator' | 'manager';
+  setUserRole: (role: 'evaluator' | 'manager') => void;
+  managedCenterId?: string;
   setManagedCenterId: (id?: string) => void;
-  isAuthenticated: boolean; // Track authentication state
+  isAuthenticated: boolean;
   userName: string;
   userEmail: string;
 }
 
-// Initial context state
-const initialState = {
-  userRole: 'evaluator' as UserRole,
+const UserContext = createContext<UserContextType>({
+  userRole: 'evaluator',
   setUserRole: () => {},
   setManagedCenterId: () => {},
-  isAuthenticated: true, // Default to true for demo
-  userName: 'Demo User',
-  userEmail: 'user@bau.edu.tr',
-};
-
-export const UserContext = createContext<UserContextType>(initialState);
+  isAuthenticated: false,
+  userName: '',
+  userEmail: '',
+});
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [userRole, setUserRole] = useState<UserRole>(initialState.userRole);
-  const [managedCenterId, setManagedCenterId] = useState<string | undefined>();
-  const [userName] = useState(initialState.userName);
-  const [userEmail] = useState(initialState.userEmail);
-  const [isAuthenticated] = useState(initialState.isAuthenticated);
-
-  // Show toast notification when role changes
-  const handleRoleChange = (role: UserRole) => {
-    setUserRole(role);
-    toast({
-      title: "Role Changed",
-      description: `You are now viewing the system as a ${role === 'evaluator' ? 'University Evaluator' : 'Center Manager'}`,
-    });
-  };
-
-  // Reset managedCenterId when switching from manager to evaluator
-  useEffect(() => {
-    if (userRole === 'evaluator' && managedCenterId) {
-      setManagedCenterId(undefined);
-    }
-  }, [userRole, managedCenterId]);
-
+  // This is now a stub - real authentication state comes from useAuth hook
   return (
-    <UserContext.Provider value={{ 
-      userRole, 
-      setUserRole: handleRoleChange, 
-      managedCenterId, 
-      setManagedCenterId,
-      isAuthenticated,
-      userName,
-      userEmail
+    <UserContext.Provider value={{
+      userRole: 'evaluator',
+      setUserRole: () => {},
+      managedCenterId: undefined,
+      setManagedCenterId: () => {},
+      isAuthenticated: false,
+      userName: '',
+      userEmail: '',
     }}>
       {children}
     </UserContext.Provider>
@@ -65,9 +41,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 }
 
 export function useUser() {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
+  console.warn('useUser is deprecated. Use useAuth hook instead.');
+  return useContext(UserContext);
 }
