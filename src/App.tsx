@@ -26,7 +26,8 @@ import IntegratedDashboard from "./pages/IntegratedDashboard";
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { userRole } = useAuth();
+  const { profile } = useAuth();
+  const userRole = profile?.role;
 
   return (
     <Routes>

@@ -6,6 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 type Center = Database['public']['Tables']['centers']['Row'];
 type KPI = Database['public']['Tables']['kpis']['Row'];
 type KpiUpdateRequest = Database['public']['Tables']['kpi_update_requests']['Row'];
+type KpiUpdateRequestInsert = Database['public']['Tables']['kpi_update_requests']['Insert'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export const useCenters = () => {
@@ -122,10 +123,32 @@ export const useCreateKpiRequest = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (requestData: Partial<KpiUpdateRequest>) => {
+    mutationFn: async (requestData: Partial<KpiUpdateRequestInsert>) => {
+      // Ensure required fields are present
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      const insertData: KpiUpdateRequestInsert = {
+        center_id: requestData.center_id!,
+        kpi_id: requestData.kpi_id!,
+        kpi_name: requestData.kpi_name!,
+        current_value: requestData.current_value!,
+        proposed_value: requestData.proposed_value!,
+        current_target: requestData.current_target!,
+        proposed_target: requestData.proposed_target,
+        justification: requestData.justification!,
+        data_source: requestData.data_source!,
+        measurement_period: requestData.measurement_period!,
+        impact_on_related_kpis: requestData.impact_on_related_kpis,
+        supporting_documents: requestData.supporting_documents,
+        submitted_by: user.id,
+        submitted_date: new Date().toISOString(),
+        status: 'submitted'
+      };
+
       const { data, error } = await supabase
         .from('kpi_update_requests')
-        .insert([requestData])
+        .insert(insertData)
         .select()
         .single();
       
