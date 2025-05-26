@@ -29,8 +29,24 @@ import ReportGeneratorPage from "./pages/ReportGeneratorPage";
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
+  
+  console.log('AppRoutes - Current profile:', profile);
+  console.log('AppRoutes - Loading state:', loading);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-university-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+  
   const userRole = profile?.role;
+  console.log('AppRoutes - User role:', userRole);
 
   return (
     <Routes>
@@ -78,17 +94,23 @@ const AppRoutes = () => {
   );
 };
 
+const AuthenticatedApp = () => {
+  return (
+    <UserProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </UserProvider>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthGuard>
-        <UserProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </UserProvider>
+        <AuthenticatedApp />
       </AuthGuard>
     </TooltipProvider>
   </QueryClientProvider>
