@@ -12,6 +12,7 @@ export type Database = {
       centers: {
         Row: {
           created_at: string
+          department_id: string | null
           description: string | null
           founded_year: number | null
           id: string
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          department_id?: string | null
           description?: string | null
           founded_year?: number | null
           id: string
@@ -38,6 +40,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          department_id?: string | null
           description?: string | null
           founded_year?: number | null
           id?: string
@@ -48,6 +51,85 @@ export type Database = {
           updated_at?: string
           vision?: string | null
           website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centers_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          faculty_id: string
+          head_id: string | null
+          id: string
+          name: string
+          short_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          faculty_id: string
+          head_id?: string | null
+          id: string
+          name: string
+          short_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          faculty_id?: string
+          head_id?: string | null
+          id?: string
+          name?: string
+          short_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faculties: {
+        Row: {
+          created_at: string
+          dean_id: string | null
+          description: string | null
+          id: string
+          name: string
+          short_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dean_id?: string | null
+          description?: string | null
+          id: string
+          name: string
+          short_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dean_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          short_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -236,6 +318,8 @@ export type Database = {
           full_name: string
           id: string
           managed_center_id: string | null
+          managed_department_id: string | null
+          managed_faculty_id: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -245,6 +329,8 @@ export type Database = {
           full_name: string
           id: string
           managed_center_id?: string | null
+          managed_department_id?: string | null
+          managed_faculty_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -254,10 +340,27 @@ export type Database = {
           full_name?: string
           id?: string
           managed_center_id?: string | null
+          managed_department_id?: string | null
+          managed_faculty_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_managed_department_id_fkey"
+            columns: ["managed_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_managed_faculty_id_fkey"
+            columns: ["managed_faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workflow_history: {
         Row: {
@@ -332,7 +435,7 @@ export type Database = {
         | "rejected"
         | "revision-requested"
         | "resubmitted"
-      user_role: "evaluator" | "manager"
+      user_role: "evaluator" | "manager" | "faculty_dean" | "department_head"
       workflow_action:
         | "submit"
         | "start-review"
@@ -464,7 +567,7 @@ export const Constants = {
         "revision-requested",
         "resubmitted",
       ],
-      user_role: ["evaluator", "manager"],
+      user_role: ["evaluator", "manager", "faculty_dean", "department_head"],
       workflow_action: [
         "submit",
         "start-review",

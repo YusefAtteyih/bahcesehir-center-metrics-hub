@@ -24,7 +24,9 @@ import {
   ListCheck,
   CircleCheck,
   LogOut,
-  User
+  User,
+  Building,
+  Building2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from '@/hooks/use-toast';
@@ -83,6 +85,35 @@ const AppSidebar: React.FC = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  // Get role-specific display information
+  const getRoleDisplay = () => {
+    switch (userRole) {
+      case 'evaluator':
+        return 'University Evaluator';
+      case 'faculty_dean':
+        return 'Faculty Dean';
+      case 'department_head':
+        return 'Department Head';
+      case 'manager':
+      default:
+        return 'Center Manager';
+    }
+  };
+
+  const getRoleIcon = () => {
+    switch (userRole) {
+      case 'evaluator':
+        return 'Evaluator';
+      case 'faculty_dean':
+        return 'Dean';
+      case 'department_head':
+        return 'Head';
+      case 'manager':
+      default:
+        return 'Manager';
+    }
+  };
+
   return (
     <Sidebar variant="floating" className="border-r border-gray-200">
       <SidebarRail />
@@ -91,7 +122,7 @@ const AppSidebar: React.FC = () => {
           <Logo size={isCollapsed ? "sm" : "md"} showText={!isCollapsed} />
           {!isCollapsed && (
             <div className="px-2 py-1 text-xs font-medium bg-university-orange text-white rounded-full">
-              {userRole === 'evaluator' ? 'Evaluator' : 'Manager'}
+              {getRoleIcon()}
             </div>
           )}
         </div>
@@ -111,7 +142,7 @@ const AppSidebar: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{userName}</p>
                     <p className="text-xs text-gray-500">
-                      {userRole === 'evaluator' ? 'University Evaluator' : 'Center Manager'}
+                      {getRoleDisplay()}
                     </p>
                   </div>
                 </div>
@@ -172,6 +203,74 @@ const AppSidebar: React.FC = () => {
                     <NavLink to="/kpi-approvals" className="flex items-center gap-3">
                       <CircleCheck size={18} />
                       {!isCollapsed && <span>KPI Approvals</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {userRole === 'faculty_dean' && (
+          <SidebarGroup defaultOpen>
+            <SidebarGroupLabel>Faculty Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/departments')}>
+                    <NavLink to="/departments" className="flex items-center gap-3">
+                      <Building size={18} />
+                      {!isCollapsed && <span>Departments</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/analytics')}>
+                    <NavLink to="/analytics" className="flex items-center gap-3">
+                      <ChartBar size={18} />
+                      {!isCollapsed && <span>Faculty Analytics</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/reports')}>
+                    <NavLink to="/reports" className="flex items-center gap-3">
+                      <ListCheck size={18} />
+                      {!isCollapsed && <span>Performance Reports</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {userRole === 'department_head' && (
+          <SidebarGroup defaultOpen>
+            <SidebarGroupLabel>Department Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/analytics')}>
+                    <NavLink to="/analytics" className="flex items-center gap-3">
+                      <ChartBar size={18} />
+                      {!isCollapsed && <span>Department Analytics</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/reports')}>
+                    <NavLink to="/reports" className="flex items-center gap-3">
+                      <ListCheck size={18} />
+                      {!isCollapsed && <span>Performance Reports</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/kpi-approvals')}>
+                    <NavLink to="/kpi-approvals" className="flex items-center gap-3">
+                      <CircleCheck size={18} />
+                      {!isCollapsed && <span>KPI Management</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

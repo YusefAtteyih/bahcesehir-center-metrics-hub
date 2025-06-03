@@ -35,7 +35,19 @@ const Header: React.FC = () => {
     }
   };
 
-  const roleDisplay = userRole === 'evaluator' ? 'University Evaluator' : 'Center Manager';
+  const getRoleDisplay = () => {
+    switch (userRole) {
+      case 'evaluator':
+        return 'University Evaluator';
+      case 'faculty_dean':
+        return 'Faculty Dean';
+      case 'department_head':
+        return 'Department Head';
+      case 'manager':
+      default:
+        return 'Center Manager';
+    }
+  };
   
   return (
     <header className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between">
@@ -54,7 +66,7 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-3">
         <div className="hidden md:flex flex-col items-end">
           <span className="text-sm font-medium">{userName}</span>
-          <span className="text-xs text-university-orange">{roleDisplay}</span>
+          <span className="text-xs text-university-orange">{getRoleDisplay()}</span>
         </div>
         
         <Button variant="ghost" size="icon" className="relative">

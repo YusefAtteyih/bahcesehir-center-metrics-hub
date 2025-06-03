@@ -12,6 +12,8 @@ import CentersPage from "./pages/Centers";
 import CenterDetailPage from "./pages/CenterDetail";
 import CenterProfilePage from "./pages/CenterProfile";
 import ManagerDashboard from "./pages/ManagerDashboard";
+import FacultyDashboard from "./pages/FacultyDashboard";
+import DepartmentDashboard from "./pages/DepartmentDashboard";
 import ReportSubmission from "./pages/ReportSubmission";
 import CenterSettings from "./pages/CenterSettings";
 import EvaluatorDashboard from "./pages/EvaluatorDashboard";
@@ -48,19 +50,31 @@ const AppRoutes = () => {
   const userRole = profile?.role;
   console.log('AppRoutes - User role:', userRole);
 
+  // Role-based dashboard routing
+  const getDashboardComponent = () => {
+    switch (userRole) {
+      case 'evaluator':
+        return <EvaluatorDashboard />;
+      case 'faculty_dean':
+        return <FacultyDashboard />;
+      case 'department_head':
+        return <DepartmentDashboard />;
+      case 'manager':
+      default:
+        return <ManagerDashboard />;
+    }
+  };
+
   return (
     <Routes>
       <Route path="/" element={<AppLayout />}>
         {/* Default route - redirect to dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
         
-        {/* Unified dashboard route for both roles */}
-        <Route 
-          path="dashboard" 
-          element={userRole === 'evaluator' ? <EvaluatorDashboard /> : <ManagerDashboard />} 
-        />
+        {/* Unified dashboard route for all roles */}
+        <Route path="dashboard" element={getDashboardComponent()} />
         
-        {/* Common routes for both roles */}
+        {/* Common routes for all roles */}
         <Route path="centers" element={<CentersPage />} />
         <Route path="centers/:centerId" element={<CenterDetailPage />} />
         <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
@@ -80,17 +94,35 @@ const AppRoutes = () => {
           </>
         )}
         
+        {/* Faculty Dean specific routes */}
+        {userRole === 'faculty_dean' && (
+          <>
+            <Route path="departments" element={<CentersPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="reports" element={<ReportsHub />} />
+            <Route path="kpi-approvals" element={<KpiApprovals />} />
+          </>
+        )}
+        
+        {/* Department Head specific routes */}
+        {userRole === 'department_head' && (
+          <>
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="reports" element={<ReportsHub />} />
+            <Route path="kpi-approvals" element={<KpiApprovals />} />
+          </>
+        )}
+        
         {/* Manager specific routes */}
         {userRole === 'manager' && (
           <>
-            {/* Redirect old my-center route to dashboard */}
             <Route path="my-center" element={<Navigate to="/dashboard" replace />} />
             <Route path="submit-report" element={<ReportSubmission />} />
             <Route path="center-settings" element={<CenterSettings />} />
           </>
         )}
         
-        {/* User profile route for both roles */}
+        {/* User profile route for all roles */}
         <Route path="profile" element={<UserProfilePage />} />
       </Route>
       

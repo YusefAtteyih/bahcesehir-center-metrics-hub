@@ -1,25 +1,133 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
 type Center = Database['public']['Tables']['centers']['Row'];
+type Faculty = Database['public']['Tables']['faculties']['Row'];
+type Department = Database['public']['Tables']['departments']['Row'];
 type KPI = Database['public']['Tables']['kpis']['Row'];
 type KpiUpdateRequest = Database['public']['Tables']['kpi_update_requests']['Row'];
 type KpiUpdateRequestInsert = Database['public']['Tables']['kpi_update_requests']['Insert'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-export const useCenters = () => {
+// Faculty hooks
+export const useFaculties = () => {
   return useQuery({
-    queryKey: ['centers'],
+    queryKey: ['faculties'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('centers')
+        .from('faculties')
         .select('*')
         .order('name');
       
       if (error) throw error;
-      return data as Center[];
+      return data as Faculty[];
+    }
+  });
+};
+
+export const useFaculty = (facultyId: string) => {
+  return useQuery({
+    queryKey: ['faculty', facultyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faculties')
+        .select('*')
+        .eq('id', facultyId)
+        .single();
+      
+      if (error) throw error;
+      return data as Faculty;
+    },
+    enabled: !!facultyId
+  });
+};
+
+// Department hooks
+export const useDepartments = (facultyId?: string) => {
+  return useQuery({
+    queryKey: ['departments', facultyId],
+    queryFn: async () => {
+      let query = supabase
+        .from('departments')
+        .select(`
+          *,
+          faculties (
+            name,
+            short_name
+          )
+        `)
+        .order('name');
+      
+      if (facultyId) {
+        query = query.eq('faculty_id', facultyId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    }
+  });
+};
+
+export const useDepartment = (departmentId: string) => {
+  return useQuery({
+    queryKey: ['department', departmentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select(`
+          *,
+          faculties (
+            name,
+            short_name
+          )
+        `)
+        .eq('id', departmentId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!departmentId
+  });
+};
+
+export const useCenters = (departmentId?: string) => {
+  return useQuery({
+    queryKey: ['centers', departmentId],
+    queryFn: async () => {
+      let query = supabase
+        .from('centers')
+        .select(`
+          *,
+          departments (
+            name,
+            short_name,
+            faculties (
+              name,
+              short_name
+            )
+          )
+        `)
+        .order('name');
+      
+      if (departmentId) {
+        query = query.eq('department_id', departmentId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as (Center & {
+        departments?: {
+          name: string;
+          short_name: string;
+          faculties?: {
+            name: string;
+            short_name: string;
+          };
+        };
+      })[];
     }
   });
 };
@@ -30,12 +138,22 @@ export const useCenter = (centerId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('centers')
-        .select('*')
+        .select(`
+          *,
+          departments (
+            name,
+            short_name,
+            faculties (
+              name,
+              short_name
+            )
+          )
+        `)
         .eq('id', centerId)
         .single();
       
       if (error) throw error;
-      return data as Center;
+      return data;
     },
     enabled: !!centerId
   });
