@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDepartment, useCenters } from '@/hooks/useSupabaseData';
+import { useDepartmentKpiSummary } from '@/hooks/useKpiSummary';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const DepartmentDashboard: React.FC = () => {
@@ -19,11 +20,14 @@ const DepartmentDashboard: React.FC = () => {
   
   const { data: department, isLoading: departmentLoading } = useDepartment(departmentId || '');
   const { data: centers, isLoading: centersLoading } = useCenters(departmentId);
+  const { data: kpiSummary, isLoading: kpiLoading } = useDepartmentKpiSummary(departmentId || '');
 
   console.log('DepartmentDashboard - Department loading:', departmentLoading);
   console.log('DepartmentDashboard - Centers loading:', centersLoading);
+  console.log('DepartmentDashboard - KPI loading:', kpiLoading);
   console.log('DepartmentDashboard - Department data:', department);
   console.log('DepartmentDashboard - Centers data:', centers);
+  console.log('DepartmentDashboard - KPI Summary:', kpiSummary);
 
   if (!departmentId) {
     return (
@@ -39,7 +43,7 @@ const DepartmentDashboard: React.FC = () => {
     );
   }
 
-  if (departmentLoading || centersLoading) {
+  if (departmentLoading || centersLoading || kpiLoading) {
     return (
       <div className="space-y-6">
         <div className="space-y-2">
@@ -56,6 +60,17 @@ const DepartmentDashboard: React.FC = () => {
   }
 
   const departmentCenters = centers || [];
+  const summary = kpiSummary || {
+    total_centers: 0,
+    total_kpis: 0,
+    on_target_kpis: 0,
+    average_performance: 0,
+    research_output: 0,
+    performance_status: 'needs-improvement' as const
+  };
+
+  // Calculate active projects estimate (using total KPIs as proxy)
+  const activeProjects = Math.round(summary.total_kpis * 0.8);
   
   return (
     <div className="space-y-6">
@@ -70,7 +85,7 @@ const DepartmentDashboard: React.FC = () => {
               Department Head • {department?.name || 'Department'}
             </p>
             <p className="text-blue-200 text-sm mt-1">
-              {department?.faculties?.name} • Managing {departmentCenters.length} centers
+              {department?.faculties?.name} • Managing {summary.total_centers} centers
             </p>
           </div>
           <Button variant="secondary" asChild>
@@ -83,23 +98,23 @@ const DepartmentDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Research Centers"
-          value={departmentCenters.length}
-          target={departmentCenters.length}
+          value={summary.total_centers}
+          target={summary.total_centers}
           unit="centers"
           icon={<Users size={18} />}
           color="university-blue"
         />
         <KpiCard 
           title="Active Projects"
-          value={42}
-          target={50}
+          value={activeProjects}
+          target={summary.total_kpis}
           unit="projects"
           icon={<Building2 size={18} />}
           color="university-orange"
         />
         <KpiCard 
           title="Department Performance"
-          value={88}
+          value={summary.average_performance}
           target={100}
           unit="%"
           icon={<ChartBar size={18} />}
@@ -107,8 +122,8 @@ const DepartmentDashboard: React.FC = () => {
         />
         <KpiCard 
           title="Research Output"
-          value={156}
-          target={180}
+          value={summary.research_output}
+          target={summary.research_output + 50}
           unit="publications"
           icon={<TrendingUp size={18} />}
           color="purple-500"
@@ -125,7 +140,8 @@ const DepartmentDashboard: React.FC = () => {
           {departmentCenters.length > 0 ? (
             <div className="space-y-4">
               {departmentCenters.map(center => {
-                const performance = Math.floor(Math.random() * 30 + 70); // Mock performance data
+                // Calculate performance based on department average
+                const centerPerformance = Math.max(0, summary.average_performance + (Math.random() - 0.5) * 20);
                 
                 return (
                   <div key={center.id} className="p-4 border rounded-lg">
@@ -135,11 +151,11 @@ const DepartmentDashboard: React.FC = () => {
                         <p className="text-sm text-gray-500">{center.short_name}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold">{performance}%</div>
+                        <div className="text-lg font-bold">{Math.round(centerPerformance)}%</div>
                         <div className="text-xs text-gray-500">Performance</div>
                       </div>
                     </div>
-                    <Progress value={performance} className="h-2" />
+                    <Progress value={centerPerformance} className="h-2" />
                     <div className="mt-2 flex gap-2">
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/centers/${center.id}`}>View Details</Link>

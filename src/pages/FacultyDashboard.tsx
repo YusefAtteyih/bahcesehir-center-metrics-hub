@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useFaculty, useDepartments, useCenters } from '@/hooks/useSupabaseData';
+import { useFaculty } from '@/hooks/useSupabaseData';
+import { useFacultyKpiSummary, useFacultyDepartmentsPerformance } from '@/hooks/useKpiSummary';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const FacultyDashboard: React.FC = () => {
@@ -15,8 +16,8 @@ const FacultyDashboard: React.FC = () => {
   const facultyId = profile?.managed_faculty_id;
   
   const { data: faculty, isLoading: facultyLoading } = useFaculty(facultyId || '');
-  const { data: departments, isLoading: departmentsLoading } = useDepartments(facultyId);
-  const { data: centers, isLoading: centersLoading } = useCenters();
+  const { data: kpiSummary, isLoading: kpiLoading } = useFacultyKpiSummary(facultyId || '');
+  const { data: departmentsPerformance, isLoading: deptPerfLoading } = useFacultyDepartmentsPerformance(facultyId || '');
 
   if (!facultyId) {
     return (
@@ -32,7 +33,7 @@ const FacultyDashboard: React.FC = () => {
     );
   }
 
-  if (facultyLoading || departmentsLoading || centersLoading) {
+  if (facultyLoading || kpiLoading || deptPerfLoading) {
     return (
       <div className="space-y-6">
         <div className="space-y-2">
@@ -48,10 +49,17 @@ const FacultyDashboard: React.FC = () => {
     );
   }
 
-  const facultyDepartments = departments || [];
-  const facultyCenters = centers?.filter(center => 
-    facultyDepartments.some(dept => dept.id === center.department_id)
-  ) || [];
+  const summary = kpiSummary || {
+    total_departments: 0,
+    total_centers: 0,
+    total_kpis: 0,
+    on_target_kpis: 0,
+    average_performance: 0,
+    performance_status: 'needs-improvement' as const
+  };
+
+  // Calculate growth rate based on on-target KPIs vs total KPIs
+  const growthRate = summary.total_kpis > 0 ? Math.round((summary.on_target_kpis / summary.total_kpis) * 100) : 0;
   
   return (
     <div className="space-y-6">
@@ -66,7 +74,7 @@ const FacultyDashboard: React.FC = () => {
               Faculty Dean • {faculty?.name}
             </p>
             <p className="text-blue-200 text-sm mt-1">
-              Managing {facultyDepartments.length} departments and {facultyCenters.length} centers
+              Managing {summary.total_departments} departments and {summary.total_centers} centers
             </p>
           </div>
           <Button variant="secondary" asChild>
@@ -79,32 +87,32 @@ const FacultyDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Departments"
-          value={facultyDepartments.length}
-          target={facultyDepartments.length}
+          value={summary.total_departments}
+          target={summary.total_departments}
           unit="departments"
           icon={<Building size={18} />}
           color="university-blue"
         />
         <KpiCard 
           title="Research Centers"
-          value={facultyCenters.length}
-          target={facultyCenters.length}
+          value={summary.total_centers}
+          target={summary.total_centers}
           unit="centers"
           icon={<Users size={18} />}
           color="university-orange"
         />
         <KpiCard 
           title="Faculty Performance"
-          value={85}
+          value={summary.average_performance}
           target={100}
           unit="%"
           icon={<ChartBar size={18} />}
           color="green-500"
         />
         <KpiCard 
-          title="Growth Rate"
-          value={12}
-          target={15}
+          title="KPIs On Target"
+          value={growthRate}
+          target={100}
           unit="%"
           icon={<TrendingUp size={18} />}
           color="purple-500"
@@ -119,26 +127,31 @@ const FacultyDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {facultyDepartments.map(department => {
-              const deptCenters = facultyCenters.filter(center => center.department_id === department.id);
-              const performance = Math.floor(Math.random() * 30 + 70); // Mock performance data
-              
-              return (
-                <div key={department.id} className="p-4 border rounded-lg">
+            {departmentsPerformance && departmentsPerformance.length > 0 ? (
+              departmentsPerformance.map(department => (
+                <div key={department.department_id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h4 className="font-medium">{department.name}</h4>
-                      <p className="text-sm text-gray-500">{deptCenters.length} centers</p>
+                      <h4 className="font-medium">{department.department_name}</h4>
+                      <p className="text-sm text-gray-500">
+                        {department.centers_count} centers • {department.kpis_count} KPIs
+                      </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold">{performance}%</div>
-                      <div className="text-xs text-gray-500">Performance</div>
+                      <div className="text-lg font-bold">{department.average_performance}%</div>
+                      <div className="text-xs text-gray-500 capitalize">{department.performance_status.replace('-', ' ')}</div>
                     </div>
                   </div>
-                  <Progress value={performance} className="h-2" />
+                  <Progress value={department.average_performance} className="h-2" />
                 </div>
-              );
-            })}
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium mb-2">No Departments Found</p>
+                <p className="text-sm mb-4">This faculty doesn't have any departments yet.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
