@@ -1,20 +1,45 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Center } from '@/types/center';
 import { ChartBar, TrendingUp, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCenterKpis } from '@/hooks/useSupabaseData';
 
 interface CenterCardProps {
-  center: Center;
+  center: {
+    id: string;
+    name: string;
+    short_name: string;
+    description: string | null;
+    departments?: {
+      name: string;
+      short_name: string;
+      faculties?: {
+        name: string;
+        short_name: string;
+      };
+    };
+  };
 }
 
 const CenterCard: React.FC<CenterCardProps> = ({ center }) => {
+  const { data: kpis, isLoading } = useCenterKpis(center.id);
+  
   // Calculate overall performance percentage
-  const performanceValues = center.kpis.map(kpi => (kpi.value / kpi.target) * 100);
-  const averagePerformance = performanceValues.reduce((sum, val) => sum + val, 0) / performanceValues.length;
+  const getPerformanceData = () => {
+    if (!kpis || kpis.length === 0) {
+      return { averagePerformance: 0, kpiCount: 0 };
+    }
+    
+    const performanceValues = kpis.map(kpi => (Number(kpi.current_value) / Number(kpi.target_value)) * 100);
+    const averagePerformance = performanceValues.reduce((sum, val) => sum + val, 0) / performanceValues.length;
+    
+    return { averagePerformance, kpiCount: kpis.length };
+  };
+
+  const { averagePerformance, kpiCount } = getPerformanceData();
   
   // Determine performance status
   const getPerformanceStatus = (performance: number) => {
@@ -31,37 +56,43 @@ const CenterCard: React.FC<CenterCardProps> = ({ center }) => {
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-university-blue">{center.shortName}</CardTitle>
+            <CardTitle className="text-university-blue">{center.short_name}</CardTitle>
             <CardDescription className="text-base font-medium">{center.name}</CardDescription>
           </div>
           <Badge variant={averagePerformance >= 75 ? 'default' : averagePerformance >= 60 ? 'outline' : 'destructive'}>
-            {status.label}
+            {kpiCount > 0 ? status.label : 'No Data'}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 mb-4">{center.description}</p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {center.headlineKPIs.slice(0, 3).map((kpi, index) => (
-            <Badge variant="outline" key={index} className="bg-gray-50">
-              {kpi}
-            </Badge>
-          ))}
-          {center.headlineKPIs.length > 3 && (
+        <p className="text-sm text-gray-600 mb-4">{center.description || 'No description available'}</p>
+        
+        {center.departments && (
+          <div className="flex flex-wrap gap-2 mb-3">
             <Badge variant="outline" className="bg-gray-50">
-              +{center.headlineKPIs.length - 3} more
+              {center.departments.short_name}
             </Badge>
-          )}
-        </div>
+            {center.departments.faculties && (
+              <Badge variant="outline" className="bg-blue-50">
+                {center.departments.faculties.short_name}
+              </Badge>
+            )}
+          </div>
+        )}
+        
         <div className="flex items-center mt-2">
           <ChartBar className="w-4 h-4 mr-2 text-university-blue" />
           <span className="text-sm font-medium">Performance: </span>
-          <span className="ml-1 text-sm">{averagePerformance.toFixed(0)}% of targets</span>
+          <span className="ml-1 text-sm">
+            {isLoading ? 'Loading...' : kpiCount > 0 ? `${averagePerformance.toFixed(0)}% of targets` : 'No KPIs'}
+          </span>
         </div>
         <div className="flex items-center mt-2">
           <TrendingUp className="w-4 h-4 mr-2 text-university-blue" />
           <span className="text-sm font-medium">KPIs: </span>
-          <span className="ml-1 text-sm">{center.kpis.length} metrics tracked</span>
+          <span className="ml-1 text-sm">
+            {isLoading ? 'Loading...' : `${kpiCount} metrics tracked`}
+          </span>
         </div>
       </CardContent>
       <CardFooter className="flex gap-2">

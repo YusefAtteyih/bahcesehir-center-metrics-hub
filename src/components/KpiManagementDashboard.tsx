@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAllKpis, useCenters } from '@/hooks/useSupabaseData';
 import { Plus, Search, Filter, TrendingUp, TrendingDown, Minus, BarChart3, Target, Users, Activity } from 'lucide-react';
 import KpiCreationModal from './KpiCreationModal';
@@ -21,8 +20,8 @@ const KpiManagementDashboard: React.FC = () => {
   const [selectedKpis, setSelectedKpis] = useState<string[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const { data: allKpis, isLoading: kpisLoading } = useAllKpis();
-  const { data: centers, isLoading: centersLoading } = useCenters();
+  const { data: allKpis, isLoading: kpisLoading, error: kpisError } = useAllKpis();
+  const { data: centers, isLoading: centersLoading, error: centersError } = useCenters();
 
   const kpis = allKpis || [];
   const centersList = centers || [];
@@ -81,6 +80,14 @@ const KpiManagementDashboard: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-university-blue mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading KPI data...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (kpisError || centersError) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-lg text-red-600">Error loading data. Please try again later.</p>
       </div>
     );
   }
@@ -240,7 +247,7 @@ const KpiManagementDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {filteredKpis.map(kpi => {
+                {filteredKpis.length > 0 ? filteredKpis.map(kpi => {
                   const performance = (Number(kpi.current_value) / Number(kpi.target_value)) * 100;
                   const status = getPerformanceStatus(Number(kpi.current_value), Number(kpi.target_value));
                   
@@ -278,7 +285,11 @@ const KpiManagementDashboard: React.FC = () => {
                       </div>
                     </div>
                   );
-                })}
+                }) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No KPIs found matching your criteria.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
