@@ -17,7 +17,7 @@ export const useKpiWorkflow = () => {
   const canPerformAction = useCallback((
     currentState: string,
     action: string,
-    userRole: 'manager' | 'evaluator'
+    userRole: 'manager' | 'evaluator' | 'faculty_dean' | 'department_head'
   ): boolean => {
     const transition = KPI_WORKFLOW_TRANSITIONS.find(
       t => t.fromState === currentState && t.action === action
@@ -30,7 +30,7 @@ export const useKpiWorkflow = () => {
 
   const getAvailableActions = useCallback((
     currentState: string,
-    userRole: 'manager' | 'evaluator'
+    userRole: 'manager' | 'evaluator' | 'faculty_dean' | 'department_head'
   ): string[] => {
     return KPI_WORKFLOW_TRANSITIONS
       .filter(t => t.fromState === currentState && t.allowedRoles.includes(userRole))
@@ -102,7 +102,7 @@ export const useKpiWorkflow = () => {
       fromState: request.status,
       toState: transition.toState,
       action,
-      performedBy: userRole === 'manager' ? request.submittedBy : 'Current Evaluator',
+      performedBy: userRole === 'manager' ? request.submittedBy : 'Current User',
       performedAt: new Date().toISOString(),
       comments
     };
@@ -112,8 +112,8 @@ export const useKpiWorkflow = () => {
       ...request,
       status: transition.toState as KpiUpdateRequest['status'],
       evaluatorComments: comments || request.evaluatorComments,
-      reviewedBy: userRole === 'evaluator' ? 'Current Evaluator' : request.reviewedBy,
-      reviewedDate: userRole === 'evaluator' ? new Date().toISOString().split('T')[0] : request.reviewedDate
+      reviewedBy: ['evaluator', 'faculty_dean', 'department_head'].includes(userRole) ? 'Current User' : request.reviewedBy,
+      reviewedDate: ['evaluator', 'faculty_dean', 'department_head'].includes(userRole) ? new Date().toISOString().split('T')[0] : request.reviewedDate
     };
 
     // Update workflow history

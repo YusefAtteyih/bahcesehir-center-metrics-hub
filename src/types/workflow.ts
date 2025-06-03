@@ -13,7 +13,7 @@ export interface WorkflowTransition {
   toState: string;
   action: string;
   requiresComment: boolean;
-  allowedRoles: ('manager' | 'evaluator')[];
+  allowedRoles: ('manager' | 'evaluator' | 'faculty_dean' | 'department_head')[];
 }
 
 export interface WorkflowHistory {
@@ -99,49 +99,49 @@ export const KPI_WORKFLOW_TRANSITIONS: WorkflowTransition[] = [
     toState: 'under-review',
     action: 'start-review',
     requiresComment: false,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'submitted',
     toState: 'approved',
     action: 'approve',
     requiresComment: false,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'submitted',
     toState: 'rejected',
     action: 'reject',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'submitted',
     toState: 'revision-requested',
     action: 'request-revision',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'under-review',
     toState: 'approved',
     action: 'approve',
     requiresComment: false,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'under-review',
     toState: 'rejected',
     action: 'reject',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'under-review',
     toState: 'revision-requested',
     action: 'request-revision',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'revision-requested',
@@ -155,27 +155,27 @@ export const KPI_WORKFLOW_TRANSITIONS: WorkflowTransition[] = [
     toState: 'under-review',
     action: 'start-review',
     requiresComment: false,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'resubmitted',
     toState: 'approved',
     action: 'approve',
     requiresComment: false,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'resubmitted',
     toState: 'rejected',
     action: 'reject',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   },
   {
     fromState: 'resubmitted',
     toState: 'revision-requested',
     action: 'request-revision',
     requiresComment: true,
-    allowedRoles: ['evaluator']
+    allowedRoles: ['evaluator', 'faculty_dean', 'department_head']
   }
 ];
