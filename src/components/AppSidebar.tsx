@@ -26,7 +26,11 @@ import {
   LogOut,
   User,
   Building,
-  Building2
+  Building2,
+  TrendingUp,
+  BarChart3,
+  FileText,
+  Cog
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from '@/hooks/use-toast';
@@ -176,41 +180,116 @@ const AppSidebar: React.FC = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Role-specific navigation */}
+        {/* Evaluator comprehensive navigation */}
         {userRole === 'evaluator' && (
-          <SidebarGroup defaultOpen>
-            <SidebarGroupLabel>Evaluation Tools</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/reports')}>
-                    <NavLink to="/reports" className="flex items-center gap-3">
-                      <ListCheck size={18} />
-                      {!isCollapsed && <span>Reports Hub</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/compare')}>
-                    <NavLink to="/compare" className="flex items-center gap-3">
-                      <ChartBar size={18} />
-                      {!isCollapsed && <span>Compare Centers</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/kpi-approvals')}>
-                    <NavLink to="/kpi-approvals" className="flex items-center gap-3">
-                      <CircleCheck size={18} />
-                      {!isCollapsed && <span>KPI Approvals</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <>
+            <SidebarGroup defaultOpen>
+              <SidebarGroupLabel>Organizational Structure</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/faculties')}>
+                      <NavLink to="/faculties" className="flex items-center gap-3">
+                        <Building2 size={18} />
+                        {!isCollapsed && <span>Faculties</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/departments')}>
+                      <NavLink to="/departments" className="flex items-center gap-3">
+                        <Building size={18} />
+                        {!isCollapsed && <span>Departments</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            <SidebarGroup defaultOpen>
+              <SidebarGroupLabel>Evaluation & Analytics</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/analytics')}>
+                      <NavLink to="/analytics" className="flex items-center gap-3">
+                        <ChartBar size={18} />
+                        {!isCollapsed && <span>Analytics</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/advanced-analytics')}>
+                      <NavLink to="/advanced-analytics" className="flex items-center gap-3">
+                        <BarChart3 size={18} />
+                        {!isCollapsed && <span>Advanced Analytics</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/compare')}>
+                      <NavLink to="/compare" className="flex items-center gap-3">
+                        <TrendingUp size={18} />
+                        {!isCollapsed && <span>Compare Centers</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/integrated-dashboard')}>
+                      <NavLink to="/integrated-dashboard" className="flex items-center gap-3">
+                        <LayoutDashboard size={18} />
+                        {!isCollapsed && <span>Integrated Dashboard</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            <SidebarGroup defaultOpen>
+              <SidebarGroupLabel>Reports & KPIs</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/reports')}>
+                      <NavLink to="/reports" className="flex items-center gap-3">
+                        <ListCheck size={18} />
+                        {!isCollapsed && <span>Reports Hub</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/report-generator')}>
+                      <NavLink to="/report-generator" className="flex items-center gap-3">
+                        <FileText size={18} />
+                        {!isCollapsed && <span>Report Generator</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/kpi-approvals')}>
+                      <NavLink to="/kpi-approvals" className="flex items-center gap-3">
+                        <CircleCheck size={18} />
+                        {!isCollapsed && <span>KPI Approvals</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/kpi-management')}>
+                      <NavLink to="/kpi-management" className="flex items-center gap-3">
+                        <Cog size={18} />
+                        {!isCollapsed && <span>KPI Management</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
 
+        {/* Faculty Dean navigation */}
         {userRole === 'faculty_dean' && (
           <SidebarGroup defaultOpen>
             <SidebarGroupLabel>Faculty Management</SidebarGroupLabel>
@@ -245,6 +324,7 @@ const AppSidebar: React.FC = () => {
           </SidebarGroup>
         )}
 
+        {/* Department Head navigation */}
         {userRole === 'department_head' && (
           <SidebarGroup defaultOpen>
             <SidebarGroupLabel>Department Management</SidebarGroupLabel>
@@ -279,6 +359,7 @@ const AppSidebar: React.FC = () => {
           </SidebarGroup>
         )}
 
+        {/* Manager navigation */}
         {userRole === 'manager' && (
           <SidebarGroup defaultOpen>
             <SidebarGroupLabel>Center Management</SidebarGroupLabel>

@@ -47,8 +47,10 @@ export const useFaculty = (facultyId: string) => {
 
 // Department hooks
 export const useDepartments = (facultyId?: string) => {
+  const { profile } = useAuth();
+  
   return useQuery({
-    queryKey: ['departments', facultyId],
+    queryKey: ['departments', facultyId, profile?.role],
     queryFn: async () => {
       let query = supabase
         .from('departments')
@@ -61,7 +63,8 @@ export const useDepartments = (facultyId?: string) => {
         `)
         .order('name');
       
-      if (facultyId) {
+      // Only filter by faculty if user is not an evaluator and facultyId is provided
+      if (facultyId && profile?.role !== 'evaluator') {
         query = query.eq('faculty_id', facultyId);
       }
       

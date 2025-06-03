@@ -81,9 +81,11 @@ const AppRoutes = () => {
         <Route path="centers/:centerId" element={<CenterDetailPage />} />
         <Route path="centers/:centerId/profile" element={<CenterProfilePage />} />
         
-        {/* Evaluator specific routes */}
+        {/* Evaluator specific routes - comprehensive access */}
         {userRole === 'evaluator' && (
           <>
+            <Route path="departments" element={<CentersPage />} />
+            <Route path="faculties" element={<CentersPage />} />
             <Route path="reports" element={<ReportsHub />} />
             <Route path="reports/:reportId/review" element={<ReportReview />} />
             <Route path="kpi-approvals" element={<KpiApprovals />} />
