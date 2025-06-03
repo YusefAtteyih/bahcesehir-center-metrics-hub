@@ -408,6 +408,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_kpi_transition: {
+        Args: {
+          request_id: string
+          new_status: Database["public"]["Enums"]["request_status"]
+          reviewer_id: string
+          comments?: string
+        }
+        Returns: undefined
+      }
       create_user_profile: {
         Args: {
           user_id: string

@@ -356,24 +356,43 @@ export const useCreateKpiRequest = () => {
 
 export const useUpdateKpiRequest = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<KpiUpdateRequest> }) => {
-      const { data, error } = await supabase
-        .from('kpi_update_requests')
-        .update(updates)
-        .eq('id', id)
-        .select(`
-          *,
-          centers!kpi_update_requests_center_id_fkey (
-            name,
-            short_name
-          )
-        `)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      // If this is a status change that should trigger notifications, use the database function
+      if (updates.status && ['approved', 'rejected', 'revision-requested'].includes(updates.status) && user) {
+        console.log('Using apply_kpi_transition function for status:', updates.status);
+        
+        const { error } = await supabase.rpc('apply_kpi_transition', {
+          request_id: id,
+          new_status: updates.status,
+          reviewer_id: user.id,
+          comments: updates.evaluator_comments || null
+        });
+        
+        if (error) throw error;
+        
+        // Return a mock response since the function doesn't return data
+        return { id, ...updates };
+      } else {
+        // Use regular update for other changes
+        const { data, error } = await supabase
+          .from('kpi_update_requests')
+          .update(updates)
+          .eq('id', id)
+          .select(`
+            *,
+            centers!kpi_update_requests_center_id_fkey (
+              name,
+              short_name
+            )
+          `)
+          .single();
+        
+        if (error) throw error;
+        return data;
+      }
     },
     onMutate: async ({ id, updates }) => {
       await queryClient.cancelQueries({ queryKey: ['kpi-requests'] });

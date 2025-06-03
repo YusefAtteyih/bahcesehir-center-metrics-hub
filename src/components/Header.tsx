@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
 import { 
-  Bell, 
   User,
   Search,
   LogOut,
@@ -14,6 +13,7 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Input } from './ui/input';
 import { toast } from '@/hooks/use-toast';
+import NotificationsDropdown from './NotificationsDropdown';
 
 const Header: React.FC = () => {
   const { userRole, userName } = useUser();
@@ -69,10 +69,7 @@ const Header: React.FC = () => {
           <span className="text-xs text-university-orange">{getRoleDisplay()}</span>
         </div>
         
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-university-orange rounded-full"></span>
-        </Button>
+        <NotificationsDropdown />
         
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-university-blue text-white rounded-full flex items-center justify-center">
