@@ -14,8 +14,16 @@ const DepartmentDashboard: React.FC = () => {
   const { profile } = useAuth();
   const departmentId = profile?.managed_department_id;
   
+  console.log('DepartmentDashboard - Profile:', profile);
+  console.log('DepartmentDashboard - Department ID:', departmentId);
+  
   const { data: department, isLoading: departmentLoading } = useDepartment(departmentId || '');
   const { data: centers, isLoading: centersLoading } = useCenters(departmentId);
+
+  console.log('DepartmentDashboard - Department loading:', departmentLoading);
+  console.log('DepartmentDashboard - Centers loading:', centersLoading);
+  console.log('DepartmentDashboard - Department data:', department);
+  console.log('DepartmentDashboard - Centers data:', centers);
 
   if (!departmentId) {
     return (
@@ -59,7 +67,7 @@ const DepartmentDashboard: React.FC = () => {
               Welcome, {profile?.full_name}
             </h1>
             <p className="text-blue-100 mt-1">
-              Department Head • {department?.name}
+              Department Head • {department?.name || 'Department'}
             </p>
             <p className="text-blue-200 text-sm mt-1">
               {department?.faculties?.name} • Managing {departmentCenters.length} centers

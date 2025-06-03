@@ -1,6 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { useAuth } from './useAuth';
 
 type Center = Database['public']['Tables']['centers']['Row'];
 type Faculty = Database['public']['Tables']['faculties']['Row'];
@@ -94,8 +96,10 @@ export const useDepartment = (departmentId: string) => {
 };
 
 export const useCenters = (departmentId?: string) => {
+  const { profile } = useAuth();
+  
   return useQuery({
-    queryKey: ['centers', departmentId],
+    queryKey: ['centers', departmentId, profile?.role],
     queryFn: async () => {
       let query = supabase
         .from('centers')
@@ -112,7 +116,8 @@ export const useCenters = (departmentId?: string) => {
         `)
         .order('name');
       
-      if (departmentId) {
+      // Only filter by department if user is not an evaluator and departmentId is provided
+      if (departmentId && profile?.role !== 'evaluator') {
         query = query.eq('department_id', departmentId);
       }
       

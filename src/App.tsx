@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,8 +51,9 @@ const AppRoutes = () => {
   const userRole = profile?.role;
   console.log('AppRoutes - User role:', userRole);
 
-  // Role-based dashboard routing
+  // Role-based dashboard routing with proper role checking
   const getDashboardComponent = () => {
+    console.log('AppRoutes - Getting dashboard for role:', userRole);
     switch (userRole) {
       case 'evaluator':
         return <EvaluatorDashboard />;
