@@ -1,102 +1,116 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Clock, Award, AlertTriangle } from 'lucide-react';
-import { useKpiManagement } from '@/hooks/useKpiManagement';
+import { useOptimizedKpiManagement } from '@/hooks/useOptimizedKpiManagement';
 
 const PerformanceMetrics: React.FC = () => {
-  const { kpiRequests, getRequestStats } = useKpiManagement();
-  const stats = getRequestStats();
+  const { kpiRequests, getRequestStats, isLoading } = useOptimizedKpiManagement();
+  const stats = getRequestStats;
 
-  const getProcessingEfficiency = () => {
-    const totalRequests = stats.total;
-    const processedRequests = stats.approved + stats.rejected;
-    return totalRequests > 0 ? Math.round((processedRequests / totalRequests) * 100) : 0;
-  };
-
-  const getQualityScore = () => {
-    const totalProcessed = stats.approved + stats.rejected;
-    if (totalProcessed === 0) return 0;
-    return Math.round((stats.approved / totalProcessed) * 100);
-  };
-
-  const getResponseTime = () => {
-    const completedRequests = kpiRequests.filter(r => 
-      ['approved', 'rejected'].includes(r.status) && r.reviewedDate
-    );
-
-    if (completedRequests.length === 0) return 'N/A';
-
-    const totalHours = completedRequests.reduce((acc, request) => {
-      const submitted = new Date(request.submittedDate);
-      const reviewed = new Date(request.reviewedDate!);
-      const diffTime = Math.abs(reviewed.getTime() - submitted.getTime());
-      const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-      return acc + diffHours;
-    }, 0);
-
-    const avgHours = Math.round(totalHours / completedRequests.length);
-    return avgHours < 24 ? `${avgHours}h` : `${Math.round(avgHours / 24)}d`;
-  };
-
-  const getBottleneckAnalysis = () => {
-    const statusCounts = {
-      'submitted': stats.pending,
-      'under-review': stats.underReview,
-      'revision-requested': stats.needingRevision,
+  // Memoized calculations for performance metrics
+  const metrics = useMemo(() => {
+    const getProcessingEfficiency = () => {
+      const totalRequests = stats.total;
+      const processedRequests = stats.approved + stats.rejected;
+      return totalRequests > 0 ? Math.round((processedRequests / totalRequests) * 100) : 0;
     };
 
-    const maxStatus = Object.entries(statusCounts).reduce((a, b) => 
-      statusCounts[a[0]] > statusCounts[b[0]] ? a : b
-    );
-
-    return {
-      status: maxStatus[0].replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      count: maxStatus[1]
+    const getQualityScore = () => {
+      const totalProcessed = stats.approved + stats.rejected;
+      if (totalProcessed === 0) return 0;
+      return Math.round((stats.approved / totalProcessed) * 100);
     };
-  };
 
-  const processingEfficiency = getProcessingEfficiency();
-  const qualityScore = getQualityScore();
-  const responseTime = getResponseTime();
-  const bottleneck = getBottleneckAnalysis();
+    const getResponseTime = () => {
+      const completedRequests = kpiRequests.filter(r => 
+        ['approved', 'rejected'].includes(r.status) && r.reviewed_date
+      );
 
-  const metrics = [
-    {
-      title: 'Processing Efficiency',
-      value: `${processingEfficiency}%`,
-      progress: processingEfficiency,
-      icon: <Target className="w-5 h-5 text-blue-500" />,
-      description: 'Percentage of requests processed vs submitted',
-      trend: processingEfficiency >= 80 ? 'up' : 'down',
-    },
-    {
-      title: 'Quality Score',
-      value: `${qualityScore}%`,
-      progress: qualityScore,
-      icon: <Award className="w-5 h-5 text-green-500" />,
-      description: 'Approval rate of processed requests',
-      trend: qualityScore >= 70 ? 'up' : 'down',
-    },
-    {
-      title: 'Avg Response Time',
-      value: responseTime,
-      progress: responseTime === 'N/A' ? 0 : Math.max(0, 100 - (parseInt(responseTime) * 10)),
-      icon: <Clock className="w-5 h-5 text-orange-500" />,
-      description: 'Average time from submission to decision',
-      trend: 'neutral',
-    },
-    {
-      title: 'Current Bottleneck',
-      value: bottleneck.status,
-      progress: Math.min(100, (bottleneck.count / stats.total) * 100),
-      icon: <AlertTriangle className="w-5 h-5 text-red-500" />,
-      description: `${bottleneck.count} requests in this stage`,
-      trend: 'down',
-    },
-  ];
+      if (completedRequests.length === 0) return 'N/A';
+
+      const totalHours = completedRequests.reduce((acc, request) => {
+        const submitted = new Date(request.submitted_date || request.created_at);
+        const reviewed = new Date(request.reviewed_date!);
+        const diffTime = Math.abs(reviewed.getTime() - submitted.getTime());
+        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+        return acc + diffHours;
+      }, 0);
+
+      const avgHours = Math.round(totalHours / completedRequests.length);
+      return avgHours < 24 ? `${avgHours}h` : `${Math.round(avgHours / 24)}d`;
+    };
+
+    const getBottleneckAnalysis = () => {
+      const statusCounts = {
+        'submitted': stats.pending,
+        'under-review': stats.underReview,
+        'revision-requested': stats.needingRevision,
+      };
+
+      const maxStatus = Object.entries(statusCounts).reduce((a, b) => 
+        statusCounts[a[0] as keyof typeof statusCounts] > statusCounts[b[0] as keyof typeof statusCounts] ? a : b
+      );
+
+      return {
+        status: maxStatus[0].replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        count: maxStatus[1]
+      };
+    };
+
+    const processingEfficiency = getProcessingEfficiency();
+    const qualityScore = getQualityScore();
+    const responseTime = getResponseTime();
+    const bottleneck = getBottleneckAnalysis();
+
+    return [
+      {
+        title: 'Processing Efficiency',
+        value: `${processingEfficiency}%`,
+        progress: processingEfficiency,
+        icon: <Target className="w-5 h-5 text-blue-500" />,
+        description: 'Percentage of requests processed vs submitted',
+        trend: processingEfficiency >= 80 ? 'up' : 'down',
+      },
+      {
+        title: 'Quality Score',
+        value: `${qualityScore}%`,
+        progress: qualityScore,
+        icon: <Award className="w-5 h-5 text-green-500" />,
+        description: 'Approval rate of processed requests',
+        trend: qualityScore >= 70 ? 'up' : 'down',
+      },
+      {
+        title: 'Avg Response Time',
+        value: responseTime,
+        progress: responseTime === 'N/A' ? 0 : Math.max(0, 100 - (parseInt(responseTime) * 10)),
+        icon: <Clock className="w-5 h-5 text-orange-500" />,
+        description: 'Average time from submission to decision',
+        trend: 'neutral',
+      },
+      {
+        title: 'Current Bottleneck',
+        value: bottleneck.status,
+        progress: stats.total > 0 ? Math.min(100, (bottleneck.count / stats.total) * 100) : 0,
+        icon: <AlertTriangle className="w-5 h-5 text-red-500" />,
+        description: `${bottleneck.count} requests in this stage`,
+        trend: 'down',
+      },
+    ];
+  }, [stats, kpiRequests]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-university-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading performance metrics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

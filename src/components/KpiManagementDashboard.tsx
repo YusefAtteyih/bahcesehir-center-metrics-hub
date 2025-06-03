@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAllKpis, useCenters } from '@/hooks/useSupabaseData';
+import { useOptimizedKpiManagement } from '@/hooks/useOptimizedKpiManagement';
 import { Plus, Search, Filter, TrendingUp, TrendingDown, Minus, BarChart3, Target, Users, Activity } from 'lucide-react';
 import KpiCreationModal from './KpiCreationModal';
 import KpiBulkActions from './KpiBulkActions';
@@ -22,23 +23,28 @@ const KpiManagementDashboard: React.FC = () => {
 
   const { data: allKpis, isLoading: kpisLoading, error: kpisError } = useAllKpis();
   const { data: centers, isLoading: centersLoading, error: centersError } = useCenters();
+  const { kpiRequests, getRequestStats, isLoading: requestsLoading } = useOptimizedKpiManagement();
 
   const kpis = allKpis || [];
   const centersList = centers || [];
 
-  // Filter KPIs based on search and category
-  const filteredKpis = kpis.filter(kpi => {
-    const matchesSearch = kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         kpi.centers?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || kpi.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Memoized filtering for performance
+  const filteredKpis = useMemo(() => {
+    return kpis.filter(kpi => {
+      const matchesSearch = kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           kpi.centers?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || kpi.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [kpis, searchTerm, selectedCategory]);
 
-  // Get unique categories
-  const categories = Array.from(new Set(kpis.map(kpi => kpi.category).filter(Boolean)));
+  // Memoized categories calculation
+  const categories = useMemo(() => {
+    return Array.from(new Set(kpis.map(kpi => kpi.category).filter(Boolean)));
+  }, [kpis]);
 
-  // Calculate analytics
-  const getAnalytics = () => {
+  // Memoized analytics calculation
+  const analytics = useMemo(() => {
     const totalKpis = kpis.length;
     const onTargetKpis = kpis.filter(kpi => Number(kpi.current_value) >= Number(kpi.target_value) * 0.9).length;
     const belowTargetKpis = kpis.filter(kpi => Number(kpi.current_value) < Number(kpi.target_value) * 0.7).length;
@@ -53,9 +59,9 @@ const KpiManagementDashboard: React.FC = () => {
       averagePerformance,
       centerCount: centersList.length
     };
-  };
+  }, [kpis, centersList]);
 
-  const analytics = getAnalytics();
+  const stats = getRequestStats;
 
   const handleKpiSelection = (kpiId: string, selected: boolean) => {
     if (selected) {
@@ -73,7 +79,7 @@ const KpiManagementDashboard: React.FC = () => {
     return { status: 'needs-improvement', color: 'bg-red-500' };
   };
 
-  if (kpisLoading || centersLoading) {
+  if (kpisLoading || centersLoading || requestsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -234,7 +240,7 @@ const KpiManagementDashboard: React.FC = () => {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                  <SelectItem key={category} value={category!}>{category}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -1,8 +1,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
+import { Database } from '@/types/supabase';
 import { useAuth } from './useAuth';
+import { toast } from '@/hooks/use-toast';
 
 type Center = Database['public']['Tables']['centers']['Row'];
 type Faculty = Database['public']['Tables']['faculties']['Row'];
@@ -250,7 +251,6 @@ export const useCreateKpiRequest = () => {
   
   return useMutation({
     mutationFn: async (requestData: Partial<KpiUpdateRequestInsert>) => {
-      // Ensure required fields are present
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
@@ -275,14 +275,81 @@ export const useCreateKpiRequest = () => {
       const { data, error } = await supabase
         .from('kpi_update_requests')
         .insert(insertData)
-        .select()
+        .select(`
+          *,
+          centers!kpi_update_requests_center_id_fkey (
+            name,
+            short_name
+          )
+        `)
         .single();
       
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (newRequest) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['kpi-requests'] });
+
+      // Snapshot the previous value
+      const previousRequests = queryClient.getQueryData(['kpi-requests']);
+
+      // Optimistically update to the new value
+      const optimisticRequest = {
+        id: `temp-${Date.now()}`,
+        center_id: newRequest.center_id!,
+        kpi_id: newRequest.kpi_id!,
+        kpi_name: newRequest.kpi_name!,
+        current_value: newRequest.current_value!,
+        proposed_value: newRequest.proposed_value!,
+        current_target: newRequest.current_target!,
+        proposed_target: newRequest.proposed_target,
+        justification: newRequest.justification!,
+        data_source: newRequest.data_source!,
+        measurement_period: newRequest.measurement_period!,
+        impact_on_related_kpis: newRequest.impact_on_related_kpis,
+        supporting_documents: newRequest.supporting_documents,
+        status: 'submitted' as const,
+        submitted_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        submitted_by: 'temp-user',
+        reviewed_by: null,
+        reviewed_date: null,
+        evaluator_comments: null,
+        centers: {
+          name: 'Loading...',
+          short_name: 'Loading...'
+        }
+      };
+
+      queryClient.setQueryData(['kpi-requests'], (old: any) => 
+        old ? [optimisticRequest, ...old] : [optimisticRequest]
+      );
+
+      return { previousRequests };
+    },
+    onError: (err, newRequest, context) => {
+      // Rollback to the previous state
+      if (context?.previousRequests) {
+        queryClient.setQueryData(['kpi-requests'], context.previousRequests);
+      }
+      
+      toast({
+        title: "Error",
+        description: "Failed to submit KPI request. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['kpi-requests'] });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "KPI request submitted successfully.",
+      });
     }
   });
 };
@@ -296,14 +363,62 @@ export const useUpdateKpiRequest = () => {
         .from('kpi_update_requests')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          centers!kpi_update_requests_center_id_fkey (
+            name,
+            short_name
+          )
+        `)
         .single();
       
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['kpi-requests'] });
+      
+      const previousRequests = queryClient.getQueryData(['kpi-requests']);
+      
+      queryClient.setQueryData(['kpi-requests'], (old: any) => {
+        if (!old) return old;
+        return old.map((request: any) => 
+          request.id === id 
+            ? { ...request, ...updates, updated_at: new Date().toISOString() }
+            : request
+        );
+      });
+
+      return { previousRequests };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousRequests) {
+        queryClient.setQueryData(['kpi-requests'], context.previousRequests);
+      }
+      
+      toast({
+        title: "Error",
+        description: "Failed to update KPI request. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['kpi-requests'] });
+    },
+    onSuccess: (data, variables) => {
+      const actionMessages = {
+        'approved': 'KPI request approved successfully.',
+        'rejected': 'KPI request rejected.',
+        'revision-requested': 'Revision requested for KPI request.',
+        'under-review': 'KPI request is now under review.'
+      };
+      
+      const message = actionMessages[variables.updates.status as keyof typeof actionMessages] || 'KPI request updated successfully.';
+      
+      toast({
+        title: "Success",
+        description: message,
+      });
     }
   });
 };
