@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ const IntegratedDashboard: React.FC = () => {
 
   const stats = getRequestStats();
 
-  const getQuickStats = () => {
+  // Memoize quick stats calculation
+  const quickStats = useMemo(() => {
     const totalCenters = new Set(kpiRequests.map(r => r.centerId)).size;
     const approvalRate = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
     const avgProcessingTime = 3.2; // This would be calculated from actual data
@@ -33,22 +34,18 @@ const IntegratedDashboard: React.FC = () => {
       avgProcessingTime,
       activeWorkflows: stats.pending + stats.underReview
     };
-  };
+  }, [kpiRequests, stats]);
 
-  const quickStats = getQuickStats();
+  // Memoize system health data
+  const systemHealth = useMemo(() => ({
+    apiPerformance: 95,
+    databaseHealth: 98,
+    systemUptime: 99.9,
+    activeUsers: 24
+  }), []);
 
-  const getSystemHealth = () => {
-    return {
-      apiPerformance: 95,
-      databaseHealth: 98,
-      systemUptime: 99.9,
-      activeUsers: 24
-    };
-  };
-
-  const systemHealth = getSystemHealth();
-
-  const getRecentActivity = () => {
+  // Memoize recent activity data
+  const recentActivity = useMemo(() => {
     return workflowHistory
       .slice(-5)
       .reverse()
@@ -56,11 +53,10 @@ const IntegratedDashboard: React.FC = () => {
         ...activity,
         timeAgo: new Date(Date.now() - Math.random() * 86400000).toLocaleString()
       }));
-  };
+  }, [workflowHistory]);
 
-  const recentActivity = getRecentActivity();
-
-  const getPerformanceTrend = () => {
+  // Memoize performance trend data
+  const performanceTrend = useMemo(() => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
@@ -74,9 +70,7 @@ const IntegratedDashboard: React.FC = () => {
       });
     }
     return days;
-  };
-
-  const performanceTrend = getPerformanceTrend();
+  }, []);
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,28 +12,39 @@ interface KpiChartProps {
 }
 
 const KpiChart: React.FC<KpiChartProps> = ({ kpis, title, showTrends = false }) => {
-  // Prepare data for bar chart
-  const barData = kpis.map(kpi => ({
-    name: kpi.name.substring(0, 15) + (kpi.name.length > 15 ? '...' : ''),
-    value: kpi.value,
-    target: kpi.target,
-    progress: Math.min((kpi.value / kpi.target) * 100, 100)
-  }));
+  // Memoized data preparation for bar chart
+  const barData = useMemo(() => {
+    return kpis.map(kpi => {
+      // Fix progress calculation based on unit type
+      const progress = kpi.unit === 'percent' 
+        ? Math.min(kpi.value, 100)
+        : Math.min((kpi.value / kpi.target) * 100, 100);
 
-  // Generate trend data (simulated)
-  const trendData = kpis.slice(0, 5).map(kpi => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    return months.map(month => ({
-      month,
-      [kpi.name]: Math.floor(kpi.value * (0.8 + Math.random() * 0.4))
-    }));
-  }).reduce((acc, curr) => {
-    curr.forEach((item, index) => {
-      if (!acc[index]) acc[index] = { month: item.month };
-      Object.assign(acc[index], item);
+      return {
+        name: kpi.name.substring(0, 15) + (kpi.name.length > 15 ? '...' : ''),
+        value: kpi.value,
+        target: kpi.target,
+        progress
+      };
     });
-    return acc;
-  }, [] as any[]);
+  }, [kpis]);
+
+  // Memoized trend data generation
+  const trendData = useMemo(() => {
+    return kpis.slice(0, 5).map(kpi => {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      return months.map(month => ({
+        month,
+        [kpi.name]: Math.floor(kpi.value * (0.8 + Math.random() * 0.4))
+      }));
+    }).reduce((acc, curr) => {
+      curr.forEach((item, index) => {
+        if (!acc[index]) acc[index] = { month: item.month };
+        Object.assign(acc[index], item);
+      });
+      return acc;
+    }, [] as any[]);
+  }, [kpis]);
 
   const colors = ['#0069b4', '#ff7200', '#10b981', '#9f7aea', '#ed64a6'];
 

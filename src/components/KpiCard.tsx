@@ -20,7 +20,10 @@ const KpiCard: React.FC<KpiCardProps> = ({
   icon,
   color 
 }) => {
-  const progressPercentage = Math.min((value / target) * 100, 100);
+  // Fix progress calculation based on unit type
+  const progressPercentage = unit === 'percent' 
+    ? Math.min(value, 100)
+    : Math.min((value / target) * 100, 100);
   
   return (
     <div className={cn("kpi-card animate-fade-in", `border-${color}`)}>

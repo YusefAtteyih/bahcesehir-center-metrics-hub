@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -44,9 +44,22 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
     }
   };
 
-  const overallPerformance = Math.round(
-    data.reduce((acc, item) => acc + (item.current / item.target) * 100, 0) / data.length
-  );
+  // Memoize overall performance calculation
+  const overallPerformance = useMemo(() => {
+    return Math.round(
+      data.reduce((acc, item) => acc + (item.current / item.target) * 100, 0) / data.length
+    );
+  }, [data]);
+
+  // Memoize strong areas count
+  const strongAreasCount = useMemo(() => {
+    return data.filter(d => d.status === 'excellent' || d.status === 'good').length;
+  }, [data]);
+
+  // Memoize improvement areas count
+  const improvementAreasCount = useMemo(() => {
+    return data.filter(d => d.status === 'needs-improvement').length;
+  }, [data]);
 
   return (
     <div className="space-y-6">
@@ -65,15 +78,11 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
               <div className="text-sm text-gray-600">Overall Performance</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {data.filter(d => d.status === 'excellent' || d.status === 'good').length}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{strongAreasCount}</div>
               <div className="text-sm text-gray-600">Strong Areas</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
-                {data.filter(d => d.status === 'needs-improvement').length}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{improvementAreasCount}</div>
               <div className="text-sm text-gray-600">Improvement Areas</div>
             </div>
           </div>
