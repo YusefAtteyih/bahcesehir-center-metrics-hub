@@ -134,6 +134,60 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          short_name: string
+          description: string | null
+          type: Database["public"]["Enums"]["organization_type"]
+          parent_organization_id: string | null
+          location: string | null
+          website: string | null
+          founded_year: number | null
+          mission: string | null
+          vision: string | null
+          head_id: string | null
+          dean_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          short_name: string
+          description?: string | null
+          type: Database["public"]["Enums"]["organization_type"]
+          parent_organization_id?: string | null
+          location?: string | null
+          website?: string | null
+          founded_year?: number | null
+          mission?: string | null
+          vision?: string | null
+          head_id?: string | null
+          dean_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          short_name?: string
+          description?: string | null
+          type?: Database["public"]["Enums"]["organization_type"]
+          parent_organization_id?: string | null
+          location?: string | null
+          website?: string | null
+          founded_year?: number | null
+          mission?: string | null
+          vision?: string | null
+          head_id?: string | null
+          dean_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kpi_update_requests: {
         Row: {
           center_id: string
@@ -224,7 +278,7 @@ export type Database = {
       kpis: {
         Row: {
           category: string | null
-          center_id: string
+          organization_id: string
           created_at: string
           current_value: number
           id: string
@@ -237,7 +291,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
-          center_id: string
+          organization_id: string
           created_at?: string
           current_value?: number
           id?: string
@@ -250,7 +304,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
-          center_id?: string
+          organization_id?: string
           created_at?: string
           current_value?: number
           id?: string
@@ -263,10 +317,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "kpis_center_id_fkey"
-            columns: ["center_id"]
+            foreignKeyName: "kpis_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "centers"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -427,6 +481,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_organization_kpi_summary: {
+        Args: { organization_id_param: string }
+        Returns: {
+          total_child_organizations: number
+          total_kpis: number
+          on_target_kpis: number
+          average_performance: number
+          organization_type: string
+          performance_status: string
+        }
+      }
+      get_organization_children_performance: {
+        Args: { organization_id_param: string }
+        Returns: {
+          organization_id: string
+          organization_name: string
+          organization_short_name: string
+          organization_type: string
+          child_count: number
+          kpis_count: number
+          average_performance: number
+          performance_status: string
+        }[]
+      }
       get_department_kpi_summary: {
         Args: { department_id_param: string }
         Returns: Json
@@ -457,6 +535,7 @@ export type Database = {
       }
     }
     Enums: {
+      organization_type: "faculty" | "department" | "center"
       request_status:
         | "draft"
         | "submitted"
@@ -589,6 +668,7 @@ export type UserProfile = Tables<'profiles'>
 export type Center = Tables<'centers'>
 export type Department = Tables<'departments'>
 export type Faculty = Tables<'faculties'>
+export type Organization = Tables<'organizations'>
 export type KPI = Tables<'kpis'>
 export type KPIUpdateRequest = Tables<'kpi_update_requests'>
 export type Notification = Tables<'notifications'>

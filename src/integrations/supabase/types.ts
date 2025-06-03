@@ -490,7 +490,14 @@ export type Database = {
       }
       get_organization_kpi_summary: {
         Args: { organization_id_param: string }
-        Returns: Json
+        Returns: {
+          total_child_organizations: number
+          total_kpis: number
+          on_target_kpis: number
+          average_performance: number
+          organization_type: string
+          performance_status: string
+        }[]
       }
       get_organizations_by_type: {
         Args: { org_type: Database["public"]["Enums"]["organization_type"] }

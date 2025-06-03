@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllKpis, useCenters } from '@/hooks/useSupabaseData';
+import { useAllKpis } from '@/hooks/useSupabaseData';
 import { useOptimizedKpiManagement } from '@/hooks/useOptimizedKpiManagement';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Plus, Search, Filter, TrendingUp, TrendingDown, Minus, BarChart3, Target, Users, Activity } from 'lucide-react';
 import KpiCreationModal from './KpiCreationModal';
 import KpiBulkActions from './KpiBulkActions';
@@ -22,21 +23,22 @@ const KpiManagementDashboard: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: allKpis, isLoading: kpisLoading, error: kpisError } = useAllKpis();
-  const { data: centers, isLoading: centersLoading, error: centersError } = useCenters();
+  const { data: organizations, isLoading: organizationsLoading, error: organizationsError } = useOrganizations();
   const { kpiRequests, getRequestStats, isLoading: requestsLoading } = useOptimizedKpiManagement();
 
   const kpis = allKpis || [];
-  const centersList = centers || [];
+  const organizationsList = organizations || [];
 
   // Memoized filtering for performance
   const filteredKpis = useMemo(() => {
     return kpis.filter(kpi => {
+      const organization = organizationsList.find(org => org.id === kpi.organization_id);
       const matchesSearch = kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           kpi.centers?.name.toLowerCase().includes(searchTerm.toLowerCase());
+                           organization?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || kpi.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [kpis, searchTerm, selectedCategory]);
+  }, [kpis, organizationsList, searchTerm, selectedCategory]);
 
   // Memoized categories calculation
   const categories = useMemo(() => {
@@ -57,11 +59,11 @@ const KpiManagementDashboard: React.FC = () => {
       onTargetKpis,
       belowTargetKpis,
       averagePerformance,
-      centerCount: centersList.length
+      organizationCount: organizationsList.length
     };
-  }, [kpis, centersList]);
+  }, [kpis, organizationsList]);
 
-  const stats = getRequestStats;
+  const stats = getRequestStats();
 
   const handleKpiSelection = (kpiId: string, selected: boolean) => {
     if (selected) {
@@ -79,7 +81,7 @@ const KpiManagementDashboard: React.FC = () => {
     return { status: 'needs-improvement', color: 'bg-red-500' };
   };
 
-  if (kpisLoading || centersLoading || requestsLoading) {
+  if (kpisLoading || organizationsLoading || requestsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -90,7 +92,7 @@ const KpiManagementDashboard: React.FC = () => {
     );
   }
 
-  if (kpisError || centersError) {
+  if (kpisError || organizationsError) {
     return (
       <div className="text-center py-12">
         <p className="text-lg text-red-600">Error loading data. Please try again later.</p>
@@ -302,7 +304,7 @@ const KpiManagementDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <KpiAnalyticsPanel kpis={kpis} centers={centersList} />
+          <KpiAnalyticsPanel kpis={kpis} centers={organizationsList} />
         </TabsContent>
 
         <TabsContent value="bulk-actions">
@@ -313,7 +315,7 @@ const KpiManagementDashboard: React.FC = () => {
       <KpiCreationModal 
         open={showCreateModal} 
         onOpenChange={setShowCreateModal}
-        centers={centersList}
+        centers={organizationsList}
       />
     </div>
   );

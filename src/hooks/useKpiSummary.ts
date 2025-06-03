@@ -13,7 +13,16 @@ export const useOrganizationKpiSummary = (organizationId: string) => {
       });
       
       if (error) throw error;
-      return data as OrganizationSummary;
+      
+      // Convert the database response to our expected format
+      return {
+        total_child_organizations: data.total_child_organizations,
+        total_kpis: data.total_kpis,
+        on_target_kpis: data.on_target_kpis,
+        average_performance: data.average_performance,
+        organization_type: data.organization_type as 'faculty' | 'department' | 'center',
+        performance_status: data.performance_status as 'excellent' | 'good' | 'average' | 'needs-improvement'
+      };
     },
     enabled: !!organizationId
   });
@@ -28,7 +37,18 @@ export const useOrganizationChildrenPerformance = (organizationId: string) => {
       });
       
       if (error) throw error;
-      return data as OrganizationChildPerformance[];
+      
+      // Convert the database response to our expected format
+      return data.map((item: any) => ({
+        organization_id: item.organization_id,
+        organization_name: item.organization_name,
+        organization_short_name: item.organization_short_name,
+        organization_type: item.organization_type as 'faculty' | 'department' | 'center',
+        child_count: item.child_count,
+        kpis_count: item.kpis_count,
+        average_performance: item.average_performance,
+        performance_status: item.performance_status as 'excellent' | 'good' | 'average' | 'needs-improvement'
+      }));
     },
     enabled: !!organizationId
   });

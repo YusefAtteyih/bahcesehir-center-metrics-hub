@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,20 +10,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Search, Plus, Download, Upload, Trash2, Edit, BarChart3, Target, TrendingUp } from 'lucide-react';
-import { useAllKpis, useCenters, useUpdateKpi } from '@/hooks/useSupabaseData';
+import { useAllKpis, useUpdateKpi } from '@/hooks/useSupabaseData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import KpiCreationForm from './KpiCreationForm';
 import { toast } from '@/hooks/use-toast';
 
 const EnhancedKpiManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedCenter, setSelectedCenter] = useState('all');
+  const [selectedOrganization, setSelectedOrganization] = useState('all');
   const [selectedKpis, setSelectedKpis] = useState<string[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingKpi, setEditingKpi] = useState<any>(null);
 
   const { data: kpis = [], isLoading: kpisLoading, refetch } = useAllKpis();
-  const { data: centers = [] } = useCenters();
+  const { data: organizations = [] } = useOrganizations();
   const updateKpi = useUpdateKpi();
 
   const categories = useMemo(() => {
@@ -34,14 +34,15 @@ const EnhancedKpiManagement: React.FC = () => {
 
   const filteredKpis = useMemo(() => {
     return kpis.filter(kpi => {
+      const organization = organizations.find(org => org.id === kpi.organization_id);
       const matchesSearch = kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          kpi.centers?.name.toLowerCase().includes(searchTerm.toLowerCase());
+                          organization?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || kpi.category === selectedCategory;
-      const matchesCenter = selectedCenter === 'all' || kpi.center_id === selectedCenter;
+      const matchesOrganization = selectedOrganization === 'all' || kpi.organization_id === selectedOrganization;
       
-      return matchesSearch && matchesCategory && matchesCenter;
+      return matchesSearch && matchesCategory && matchesOrganization;
     });
-  }, [kpis, searchTerm, selectedCategory, selectedCenter]);
+  }, [kpis, organizations, searchTerm, selectedCategory, selectedOrganization]);
 
   const getPerformanceScore = (current: number, target: number) => {
     if (target === 0) return 0;
@@ -85,15 +86,18 @@ const EnhancedKpiManagement: React.FC = () => {
   };
 
   const handleExport = () => {
-    const exportData = filteredKpis.map(kpi => ({
-      Name: kpi.name,
-      Center: kpi.centers?.name || '',
-      Category: kpi.category,
-      'Current Value': kpi.current_value,
-      'Target Value': kpi.target_value,
-      Unit: kpi.unit || '',
-      'Performance %': Math.round(getPerformanceScore(kpi.current_value, kpi.target_value))
-    }));
+    const exportData = filteredKpis.map(kpi => {
+      const organization = organizations.find(org => org.id === kpi.organization_id);
+      return {
+        Name: kpi.name,
+        Organization: organization?.name || '',
+        Category: kpi.category,
+        'Current Value': kpi.current_value,
+        'Target Value': kpi.target_value,
+        Unit: kpi.unit || '',
+        'Performance %': Math.round(getPerformanceScore(kpi.current_value, kpi.target_value))
+      };
+    });
 
     const csvContent = [
       Object.keys(exportData[0]).join(','),
@@ -220,15 +224,15 @@ const EnhancedKpiManagement: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedCenter} onValueChange={setSelectedCenter}>
+            <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
               <SelectTrigger>
-                <SelectValue placeholder="All Centers" />
+                <SelectValue placeholder="All Organizations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Centers</SelectItem>
-                {centers.map(center => (
-                  <SelectItem key={center.id} value={center.id}>
-                    {center.short_name}
+                <SelectItem value="all">All Organizations</SelectItem>
+                {organizations.map(organization => (
+                  <SelectItem key={organization.id} value={organization.id}>
+                    {organization.short_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -274,6 +278,7 @@ const EnhancedKpiManagement: React.FC = () => {
       </Card>
 
       {/* KPI List */}
+      
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -289,6 +294,7 @@ const EnhancedKpiManagement: React.FC = () => {
             {filteredKpis.map((kpi) => {
               const score = getPerformanceScore(kpi.current_value, kpi.target_value);
               const status = getPerformanceStatus(score);
+              const organization = organizations.find(org => org.id === kpi.organization_id);
               
               return (
                 <div key={kpi.id} className="p-4 border rounded-lg">
@@ -302,7 +308,7 @@ const EnhancedKpiManagement: React.FC = () => {
                         <div>
                           <h4 className="font-semibold">{kpi.name}</h4>
                           <p className="text-sm text-gray-600">
-                            {kpi.centers?.name} • {kpi.category}
+                            {organization?.name} • {kpi.category}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
