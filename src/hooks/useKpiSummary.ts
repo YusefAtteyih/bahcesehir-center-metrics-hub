@@ -39,7 +39,7 @@ export const useFacultyKpiSummary = (facultyId: string) => {
       });
       
       if (error) throw error;
-      return data as FacultyKpiSummary;
+      return data as unknown as FacultyKpiSummary;
     },
     enabled: !!facultyId
   });
@@ -54,7 +54,7 @@ export const useDepartmentKpiSummary = (departmentId: string) => {
       });
       
       if (error) throw error;
-      return data as DepartmentKpiSummary;
+      return data as unknown as DepartmentKpiSummary;
     },
     enabled: !!departmentId
   });
