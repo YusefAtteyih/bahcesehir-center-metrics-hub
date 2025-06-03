@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/types/supabase';
@@ -364,12 +363,14 @@ export const useUpdateKpiRequest = () => {
       if (updates.status && ['approved', 'rejected', 'revision-requested'].includes(updates.status) && user) {
         console.log('Using apply_kpi_transition function for status:', updates.status);
         
-        const { error } = await supabase.rpc('apply_kpi_transition', {
-          request_id: id,
-          new_status: updates.status,
-          reviewer_id: user.id,
-          comments: updates.evaluator_comments || null
-        });
+        // Use the SQL function directly through the supabase client
+        const { error } = await supabase
+          .rpc('apply_kpi_transition', {
+            request_id: id,
+            new_status: updates.status,
+            reviewer_id: user.id,
+            comments: updates.evaluator_comments || null
+          });
         
         if (error) throw error;
         

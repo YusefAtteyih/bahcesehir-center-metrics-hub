@@ -1,13 +1,12 @@
+
 import { useState, useCallback } from 'react';
 import { KpiUpdateRequest } from '@/types/approval';
 import { useKpiWorkflow } from './useKpiWorkflow';
-import { useNotifications } from './useNotifications';
 import { useUser } from '@/contexts/UserContext';
 
 export const useKpiManagement = () => {
   const { userRole } = useUser();
   const { executeWorkflowAction } = useKpiWorkflow();
-  const { notifyKpiSubmission, notifyKpiApproval, notifyRevisionRequest } = useNotifications();
   
   const [kpiRequests, setKpiRequests] = useState<KpiUpdateRequest[]>([
     {
@@ -85,11 +84,11 @@ export const useKpiManagement = () => {
 
     setKpiRequests(prev => [newRequest, ...prev]);
     
-    // Notify evaluators of new submission
-    notifyKpiSubmission(newRequest.centerName, newRequest.kpiName);
+    // Note: Notifications are now handled automatically by the database function
+    // when KPI requests are processed through useSupabaseData hooks
     
     return newRequest;
-  }, [notifyKpiSubmission]);
+  }, []);
 
   const updateKpiRequest = useCallback((
     requestId: string,
@@ -107,19 +106,13 @@ export const useKpiManagement = () => {
           prev.map(r => r.id === requestId ? updatedRequest : r)
         );
 
-        // Send notifications based on action
-        if (action === 'approve') {
-          notifyKpiApproval(request.kpiName, true);
-        } else if (action === 'reject') {
-          notifyKpiApproval(request.kpiName, false);
-        } else if (action === 'request-revision') {
-          notifyRevisionRequest(request.kpiName, comments || '');
-        }
+        // Note: Notifications are now handled automatically by the database function
+        // when using the Supabase hooks for real KPI requests
       }
     );
 
     return success;
-  }, [kpiRequests, executeWorkflowAction, notifyKpiApproval, notifyRevisionRequest]);
+  }, [kpiRequests, executeWorkflowAction]);
 
   const getKpiRequestsByStatus = useCallback((status: KpiUpdateRequest['status']) => {
     return kpiRequests.filter(r => r.status === status);
