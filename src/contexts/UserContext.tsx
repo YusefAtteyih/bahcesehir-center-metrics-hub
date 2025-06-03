@@ -2,12 +2,19 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
+interface AuthError {
+  message: string;
+  code?: string;
+  details?: string;
+}
+
 interface UserContextType {
   userName: string;
   userRole: 'evaluator' | 'manager' | 'faculty_dean' | 'department_head' | undefined;
   managedCenterId: string | undefined;
   isAuthenticated: boolean;
   loading: boolean;
+  error: AuthError | null;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -25,14 +32,15 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const { profile, isAuthenticated, loading } = useAuth();
+  const { profile, isAuthenticated, loading, error } = useAuth();
 
   const value: UserContextType = {
     userName: profile?.full_name || 'User',
     userRole: profile?.role,
     managedCenterId: profile?.managed_center_id || undefined,
     isAuthenticated,
-    loading
+    loading,
+    error
   };
 
   return (

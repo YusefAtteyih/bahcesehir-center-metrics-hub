@@ -1,10 +1,9 @@
 
 import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
-
-type UserProfile = Database['public']['Tables']['profiles']['Row'];
+import { UserProfile } from '@/types/supabase';
+import { safeParseProfile } from '@/lib/guards';
 
 interface AuthError {
   message: string;
@@ -12,29 +11,53 @@ interface AuthError {
   details?: string;
 }
 
+interface AuthState {
+  user: User | null;
+  profile: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  error: AuthError | null;
+}
+
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<AuthError | null>(null);
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    session: null,
+    loading: true,
+    error: null,
+  });
 
   useEffect(() => {
     console.log('useAuth - Initializing authentication system...');
     
     // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('useAuth - Auth state change:', { event, hasSession: !!session });
       
-      setError(null); // Clear previous errors
-      setUser(session?.user ?? null);
+      // Batch all state updates together to prevent race conditions
+      setAuthState(prev => ({
+        ...prev,
+        error: null, // Clear previous errors
+        user: session?.user ?? null,
+        session,
+        loading: !!session?.user, // Keep loading true if we have user but need profile
+      }));
       
+      // Handle profile fetching after state update
       if (session?.user) {
         console.log('useAuth - Session found, fetching profile for:', session.user.id);
-        await handleUserProfile(session.user);
+        // Use setTimeout to defer profile fetching and prevent callback recursion
+        setTimeout(() => {
+          handleUserProfile(session.user);
+        }, 0);
       } else {
         console.log('useAuth - No session, clearing profile');
-        setProfile(null);
-        setLoading(false);
+        setAuthState(prev => ({
+          ...prev,
+          profile: null,
+          loading: false,
+        }));
       }
     });
 
@@ -48,16 +71,27 @@ export const useAuth = () => {
       
       if (error) {
         console.error('useAuth - Session error:', error);
-        setError({ message: 'Failed to load session', details: error.message });
-        setLoading(false);
+        setAuthState(prev => ({
+          ...prev,
+          error: { message: 'Failed to load session', details: error.message },
+          loading: false,
+        }));
         return;
       }
       
-      setUser(session?.user ?? null);
+      setAuthState(prev => ({
+        ...prev,
+        user: session?.user ?? null,
+        session,
+        loading: !!session?.user,
+      }));
+      
       if (session?.user) {
-        handleUserProfile(session.user);
+        setTimeout(() => {
+          handleUserProfile(session.user);
+        }, 0);
       } else {
-        setLoading(false);
+        setAuthState(prev => ({ ...prev, loading: false }));
       }
     });
 
@@ -69,7 +103,6 @@ export const useAuth = () => {
 
   const handleUserProfile = async (user: User) => {
     console.log('useAuth - Handling user profile for:', user.id);
-    setLoading(true);
     
     try {
       // First, try to fetch existing profile
@@ -92,8 +125,19 @@ export const useAuth = () => {
 
       if (existingProfile) {
         console.log('useAuth - Profile found:', existingProfile);
-        setProfile(existingProfile);
-        setLoading(false);
+        
+        // Validate profile data
+        const profileValidation = safeParseProfile(existingProfile);
+        if (!profileValidation.success) {
+          console.warn('useAuth - Profile validation failed:', profileValidation.error);
+          // Still use the profile but log the validation error
+        }
+        
+        setAuthState(prev => ({
+          ...prev,
+          profile: existingProfile,
+          loading: false,
+        }));
         return;
       }
 
@@ -103,11 +147,14 @@ export const useAuth = () => {
       
     } catch (error) {
       console.error('useAuth - Profile handling error:', error);
-      setError({ 
-        message: 'Failed to load user profile', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      });
-      setLoading(false);
+      setAuthState(prev => ({
+        ...prev,
+        error: { 
+          message: 'Failed to load user profile', 
+          details: error instanceof Error ? error.message : 'Unknown error' 
+        },
+        loading: false,
+      }));
     }
   };
 
@@ -154,23 +201,35 @@ export const useAuth = () => {
       }
 
       console.log('useAuth - Profile created and retrieved successfully:', newProfile);
-      setProfile(newProfile);
-      setLoading(false);
+      
+      // Validate new profile
+      const profileValidation = safeParseProfile(newProfile);
+      if (!profileValidation.success) {
+        console.warn('useAuth - New profile validation failed:', profileValidation.error);
+      }
+      
+      setAuthState(prev => ({
+        ...prev,
+        profile: newProfile,
+        loading: false,
+      }));
       
     } catch (error) {
       console.error('useAuth - Failed to create missing profile:', error);
-      setError({ 
-        message: 'Failed to create user profile', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      });
-      setLoading(false);
+      setAuthState(prev => ({
+        ...prev,
+        error: { 
+          message: 'Failed to create user profile', 
+          details: error instanceof Error ? error.message : 'Unknown error' 
+        },
+        loading: false,
+      }));
     }
   };
 
   const signIn = async (email: string, password: string) => {
     console.log('useAuth - Attempting sign in for:', email);
-    setLoading(true);
-    setError(null);
+    setAuthState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -197,16 +256,14 @@ export const useAuth = () => {
         code: error.message?.includes('Invalid login credentials') ? 'invalid_credentials' : 'sign_in_error',
         details: error.message
       };
-      setError(authError);
-      setLoading(false);
+      setAuthState(prev => ({ ...prev, error: authError, loading: false }));
       return { data: null, error: authError };
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: 'evaluator' | 'manager' | 'faculty_dean' | 'department_head' = 'manager') => {
     console.log('useAuth - Attempting sign up for:', email, 'with role:', role);
-    setLoading(true);
-    setError(null);
+    setAuthState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -240,15 +297,14 @@ export const useAuth = () => {
         code: error.message?.includes('User already registered') ? 'user_exists' : 'sign_up_error',
         details: error.message
       };
-      setError(authError);
-      setLoading(false);
+      setAuthState(prev => ({ ...prev, error: authError, loading: false }));
       return { data: null, error: authError };
     }
   };
 
   const signOut = async () => {
     console.log('useAuth - Signing out...');
-    setError(null);
+    setAuthState(prev => ({ ...prev, error: null }));
     
     try {
       const { error } = await supabase.auth.signOut();
@@ -257,8 +313,13 @@ export const useAuth = () => {
         throw error;
       }
       
-      setUser(null);
-      setProfile(null);
+      setAuthState({
+        user: null,
+        profile: null,
+        session: null,
+        loading: false,
+        error: null,
+      });
       console.log('useAuth - Sign out successful');
       return { error: null };
       
@@ -268,48 +329,49 @@ export const useAuth = () => {
         message: 'Sign out failed',
         details: error.message
       };
-      setError(authError);
+      setAuthState(prev => ({ ...prev, error: authError }));
       return { error: authError };
     }
   };
 
   const retryProfileCreation = async () => {
-    if (!user) {
+    if (!authState.user) {
       console.log('useAuth - Cannot retry profile creation: no user logged in');
       return;
     }
     
-    console.log('useAuth - Retrying profile creation for user:', user.id);
-    setError(null);
-    await handleUserProfile(user);
+    console.log('useAuth - Retrying profile creation for user:', authState.user.id);
+    setAuthState(prev => ({ ...prev, error: null }));
+    await handleUserProfile(authState.user);
   };
 
   const clearError = () => {
-    setError(null);
+    setAuthState(prev => ({ ...prev, error: null }));
   };
 
-  const authState = {
-    user,
-    profile,
-    loading,
-    error,
+  const returnState = {
+    user: authState.user,
+    profile: authState.profile,
+    session: authState.session,
+    loading: authState.loading,
+    error: authState.error,
     signIn,
     signUp,
     signOut,
     retryProfileCreation,
     clearError,
-    isAuthenticated: !!user,
-    userRole: profile?.role,
-    managedCenterId: profile?.managed_center_id
+    isAuthenticated: !!authState.user,
+    userRole: authState.profile?.role,
+    managedCenterId: authState.profile?.managed_center_id
   };
 
   console.log('useAuth - Current state:', {
-    isAuthenticated: authState.isAuthenticated,
-    loading: authState.loading,
-    hasProfile: !!authState.profile,
-    userRole: authState.userRole,
-    hasError: !!authState.error
+    isAuthenticated: returnState.isAuthenticated,
+    loading: returnState.loading,
+    hasProfile: !!returnState.profile,
+    userRole: returnState.userRole,
+    hasError: !!returnState.error
   });
 
-  return authState;
+  return returnState;
 };
