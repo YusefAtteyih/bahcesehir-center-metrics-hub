@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface UserContextType {
   userName: string;
-  userRole: 'evaluator' | 'manager' | undefined;
+  userRole: 'evaluator' | 'manager' | 'faculty_dean' | 'department_head' | undefined;
   managedCenterId: string | undefined;
   isAuthenticated: boolean;
   loading: boolean;
