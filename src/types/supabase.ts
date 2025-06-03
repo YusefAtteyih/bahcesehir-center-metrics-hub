@@ -427,6 +427,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_department_kpi_summary: {
+        Args: { department_id_param: string }
+        Returns: Json
+      }
+      get_faculty_departments_performance: {
+        Args: { faculty_id_param: string }
+        Returns: {
+          department_id: string
+          department_name: string
+          department_short_name: string
+          centers_count: number
+          kpis_count: number
+          average_performance: number
+          performance_status: string
+        }[]
+      }
+      get_faculty_kpi_summary: {
+        Args: { faculty_id_param: string }
+        Returns: Json
+      }
       get_user_managed_center: {
         Args: { user_id?: string }
         Returns: string
