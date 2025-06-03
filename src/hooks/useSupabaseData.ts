@@ -4,91 +4,61 @@ import { Database } from '@/types/supabase';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
 
-type Center = Database['public']['Tables']['centers']['Row'];
-type Faculty = Database['public']['Tables']['faculties']['Row'];
-type Department = Database['public']['Tables']['departments']['Row'];
 type KPI = Database['public']['Tables']['kpis']['Row'];
 type KpiUpdateRequest = Database['public']['Tables']['kpi_update_requests']['Row'];
 type KpiUpdateRequestInsert = Database['public']['Tables']['kpi_update_requests']['Insert'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-// Faculty hooks
-export const useFaculties = () => {
-  return useQuery({
-    queryKey: ['faculties'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('faculties')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data as Faculty[];
-    }
-  });
-};
+// Re-export organization hooks for backward compatibility
+export {
+  useOrganizations,
+  useFaculties,
+  useDepartments,
+  useCenters,
+  useOrganization,
+  useOrganizationKpis,
+  useOrganizationChildren,
+  useOrganizationSummary,
+  useOrganizationChildrenPerformance,
+  useCreateOrganization,
+  useUpdateOrganization
+} from './useOrganizations';
 
+// Legacy hooks that now use the organizations table
 export const useFaculty = (facultyId: string) => {
   return useQuery({
-    queryKey: ['faculty', facultyId],
+    queryKey: ['organization', facultyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('faculties')
+        .from('organizations')
         .select('*')
         .eq('id', facultyId)
+        .eq('type', 'faculty')
         .single();
       
       if (error) throw error;
-      return data as Faculty;
+      return data;
     },
     enabled: !!facultyId
   });
 };
 
-// Department hooks
-export const useDepartments = (facultyId?: string) => {
-  const { profile } = useAuth();
-  
-  return useQuery({
-    queryKey: ['departments', facultyId, profile?.role],
-    queryFn: async () => {
-      let query = supabase
-        .from('departments')
-        .select(`
-          *,
-          faculties (
-            name,
-            short_name
-          )
-        `)
-        .order('name');
-      
-      // Only filter by faculty if user is not an evaluator and facultyId is provided
-      if (facultyId && profile?.role !== 'evaluator') {
-        query = query.eq('faculty_id', facultyId);
-      }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    }
-  });
-};
-
 export const useDepartment = (departmentId: string) => {
   return useQuery({
-    queryKey: ['department', departmentId],
+    queryKey: ['organization', departmentId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('departments')
+        .from('organizations')
         .select(`
           *,
-          faculties (
+          parent_organization:organizations!parent_organization_id (
             name,
-            short_name
+            short_name,
+            type
           )
         `)
         .eq('id', departmentId)
+        .eq('type', 'department')
         .single();
       
       if (error) throw error;
@@ -98,66 +68,22 @@ export const useDepartment = (departmentId: string) => {
   });
 };
 
-export const useCenters = (departmentId?: string) => {
-  const { profile } = useAuth();
-  
-  return useQuery({
-    queryKey: ['centers', departmentId, profile?.role],
-    queryFn: async () => {
-      let query = supabase
-        .from('centers')
-        .select(`
-          *,
-          departments (
-            name,
-            short_name,
-            faculties (
-              name,
-              short_name
-            )
-          )
-        `)
-        .order('name');
-      
-      // Only filter by department if user is not an evaluator and departmentId is provided
-      if (departmentId && profile?.role !== 'evaluator') {
-        query = query.eq('department_id', departmentId);
-      }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as (Center & {
-        departments?: {
-          name: string;
-          short_name: string;
-          faculties?: {
-            name: string;
-            short_name: string;
-          };
-        };
-      })[];
-    }
-  });
-};
-
 export const useCenter = (centerId: string) => {
   return useQuery({
-    queryKey: ['center', centerId],
+    queryKey: ['organization', centerId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('centers')
+        .from('organizations')
         .select(`
           *,
-          departments (
+          parent_organization:organizations!parent_organization_id (
             name,
             short_name,
-            faculties (
-              name,
-              short_name
-            )
+            type
           )
         `)
         .eq('id', centerId)
+        .eq('type', 'center')
         .single();
       
       if (error) throw error;
@@ -169,12 +95,12 @@ export const useCenter = (centerId: string) => {
 
 export const useCenterKpis = (centerId: string) => {
   return useQuery({
-    queryKey: ['center-kpis', centerId],
+    queryKey: ['organization-kpis', centerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('kpis')
         .select('*')
-        .eq('center_id', centerId)
+        .eq('organization_id', centerId)
         .order('name');
       
       if (error) throw error;
@@ -192,9 +118,10 @@ export const useKpiRequests = () => {
         .from('kpi_update_requests')
         .select(`
           *,
-          centers!kpi_update_requests_center_id_fkey (
+          organizations!kpi_update_requests_organization_id_fkey (
             name,
-            short_name
+            short_name,
+            type
           )
         `)
         .order('created_at', { ascending: false });
@@ -213,9 +140,10 @@ export const useAllKpis = () => {
         .from('kpis')
         .select(`
           *,
-          centers (
+          organizations (
             name,
-            short_name
+            short_name,
+            type
           )
         `)
         .order('name');
@@ -254,7 +182,7 @@ export const useCreateKpiRequest = () => {
       if (!user) throw new Error('No authenticated user');
 
       const insertData: KpiUpdateRequestInsert = {
-        center_id: requestData.center_id!,
+        organization_id: requestData.organization_id!,
         kpi_id: requestData.kpi_id!,
         kpi_name: requestData.kpi_name!,
         current_value: requestData.current_value!,
@@ -276,9 +204,10 @@ export const useCreateKpiRequest = () => {
         .insert(insertData)
         .select(`
           *,
-          centers!kpi_update_requests_center_id_fkey (
+          organizations!kpi_update_requests_organization_id_fkey (
             name,
-            short_name
+            short_name,
+            type
           )
         `)
         .single();
@@ -287,16 +216,13 @@ export const useCreateKpiRequest = () => {
       return data;
     },
     onMutate: async (newRequest) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['kpi-requests'] });
 
-      // Snapshot the previous value
       const previousRequests = queryClient.getQueryData(['kpi-requests']);
 
-      // Optimistically update to the new value
       const optimisticRequest = {
         id: `temp-${Date.now()}`,
-        center_id: newRequest.center_id!,
+        organization_id: newRequest.organization_id!,
         kpi_id: newRequest.kpi_id!,
         kpi_name: newRequest.kpi_name!,
         current_value: newRequest.current_value!,
@@ -316,9 +242,10 @@ export const useCreateKpiRequest = () => {
         reviewed_by: null,
         reviewed_date: null,
         evaluator_comments: null,
-        centers: {
+        organizations: {
           name: 'Loading...',
-          short_name: 'Loading...'
+          short_name: 'Loading...',
+          type: 'center' as const
         }
       };
 
@@ -329,7 +256,6 @@ export const useCreateKpiRequest = () => {
       return { previousRequests };
     },
     onError: (err, newRequest, context) => {
-      // Rollback to the previous state
       if (context?.previousRequests) {
         queryClient.setQueryData(['kpi-requests'], context.previousRequests);
       }
@@ -341,7 +267,6 @@ export const useCreateKpiRequest = () => {
       });
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['kpi-requests'] });
     },
     onSuccess: () => {
@@ -359,11 +284,9 @@ export const useUpdateKpiRequest = () => {
   
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<KpiUpdateRequest> }) => {
-      // If this is a status change that should trigger notifications, use the database function
       if (updates.status && ['approved', 'rejected', 'revision-requested'].includes(updates.status) && user) {
         console.log('Using apply_kpi_transition function for status:', updates.status);
         
-        // Use the SQL function directly through the supabase client
         const { error } = await supabase
           .rpc('apply_kpi_transition', {
             request_id: id,
@@ -374,19 +297,18 @@ export const useUpdateKpiRequest = () => {
         
         if (error) throw error;
         
-        // Return a mock response since the function doesn't return data
         return { id, ...updates };
       } else {
-        // Use regular update for other changes
         const { data, error } = await supabase
           .from('kpi_update_requests')
           .update(updates)
           .eq('id', id)
           .select(`
             *,
-            centers!kpi_update_requests_center_id_fkey (
+            organizations!kpi_update_requests_organization_id_fkey (
               name,
-              short_name
+              short_name,
+              type
             )
           `)
           .single();
@@ -460,7 +382,7 @@ export const useUpdateKpi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-kpis'] });
-      queryClient.invalidateQueries({ queryKey: ['center-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-kpis'] });
     }
   });
 };

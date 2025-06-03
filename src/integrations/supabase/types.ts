@@ -135,7 +135,6 @@ export type Database = {
       }
       kpi_update_requests: {
         Row: {
-          center_id: string
           created_at: string
           current_target: number
           current_value: number
@@ -147,6 +146,7 @@ export type Database = {
           kpi_id: string
           kpi_name: string
           measurement_period: string
+          organization_id: string
           proposed_target: number | null
           proposed_value: number
           reviewed_by: string | null
@@ -158,7 +158,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          center_id: string
           created_at?: string
           current_target: number
           current_value: number
@@ -170,6 +169,7 @@ export type Database = {
           kpi_id: string
           kpi_name: string
           measurement_period: string
+          organization_id: string
           proposed_target?: number | null
           proposed_value: number
           reviewed_by?: string | null
@@ -181,7 +181,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          center_id?: string
           created_at?: string
           current_target?: number
           current_value?: number
@@ -193,6 +192,7 @@ export type Database = {
           kpi_id?: string
           kpi_name?: string
           measurement_period?: string
+          organization_id?: string
           proposed_target?: number | null
           proposed_value?: number
           reviewed_by?: string | null
@@ -206,7 +206,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "kpi_update_requests_center_id_fkey"
-            columns: ["center_id"]
+            columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "centers"
             referencedColumns: ["id"]
@@ -223,12 +223,12 @@ export type Database = {
       kpis: {
         Row: {
           category: string | null
-          center_id: string
           created_at: string
           current_value: number
           id: string
           measurement: string | null
           name: string
+          organization_id: string
           target_value: number
           unit: string | null
           updated_at: string
@@ -236,12 +236,12 @@ export type Database = {
         }
         Insert: {
           category?: string | null
-          center_id: string
           created_at?: string
           current_value?: number
           id?: string
           measurement?: string | null
           name: string
+          organization_id: string
           target_value: number
           unit?: string | null
           updated_at?: string
@@ -249,12 +249,12 @@ export type Database = {
         }
         Update: {
           category?: string | null
-          center_id?: string
           created_at?: string
           current_value?: number
           id?: string
           measurement?: string | null
           name?: string
+          organization_id?: string
           target_value?: number
           unit?: string | null
           updated_at?: string
@@ -263,7 +263,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "kpis_center_id_fkey"
-            columns: ["center_id"]
+            columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "centers"
             referencedColumns: ["id"]
@@ -311,15 +311,75 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          created_at: string | null
+          dean_id: string | null
+          description: string | null
+          founded_year: number | null
+          head_id: string | null
+          id: string
+          location: string | null
+          mission: string | null
+          name: string
+          parent_organization_id: string | null
+          short_name: string
+          type: Database["public"]["Enums"]["organization_type"]
+          updated_at: string | null
+          vision: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dean_id?: string | null
+          description?: string | null
+          founded_year?: number | null
+          head_id?: string | null
+          id: string
+          location?: string | null
+          mission?: string | null
+          name: string
+          parent_organization_id?: string | null
+          short_name: string
+          type: Database["public"]["Enums"]["organization_type"]
+          updated_at?: string | null
+          vision?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dean_id?: string | null
+          description?: string | null
+          founded_year?: number | null
+          head_id?: string | null
+          id?: string
+          location?: string | null
+          mission?: string | null
+          name?: string
+          parent_organization_id?: string | null
+          short_name?: string
+          type?: Database["public"]["Enums"]["organization_type"]
+          updated_at?: string | null
+          vision?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_parent_organization_id_fkey"
+            columns: ["parent_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           email: string
           full_name: string
           id: string
-          managed_center_id: string | null
-          managed_department_id: string | null
-          managed_faculty_id: string | null
+          managed_organization_id: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -328,9 +388,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
-          managed_center_id?: string | null
-          managed_department_id?: string | null
-          managed_faculty_id?: string | null
+          managed_organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -339,25 +397,16 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
-          managed_center_id?: string | null
-          managed_department_id?: string | null
-          managed_faculty_id?: string | null
+          managed_organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_managed_department_id_fkey"
-            columns: ["managed_department_id"]
+            foreignKeyName: "profiles_managed_organization_id_fkey"
+            columns: ["managed_organization_id"]
             isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_managed_faculty_id_fkey"
-            columns: ["managed_faculty_id"]
-            isOneToOne: false
-            referencedRelation: "faculties"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -426,25 +475,42 @@ export type Database = {
         }
         Returns: boolean
       }
-      get_department_kpi_summary: {
-        Args: { department_id_param: string }
-        Returns: Json
-      }
-      get_faculty_departments_performance: {
-        Args: { faculty_id_param: string }
+      get_organization_children_performance: {
+        Args: { organization_id_param: string }
         Returns: {
-          department_id: string
-          department_name: string
-          department_short_name: string
-          centers_count: number
+          organization_id: string
+          organization_name: string
+          organization_short_name: string
+          organization_type: string
+          child_count: number
           kpis_count: number
           average_performance: number
           performance_status: string
         }[]
       }
-      get_faculty_kpi_summary: {
-        Args: { faculty_id_param: string }
+      get_organization_kpi_summary: {
+        Args: { organization_id_param: string }
         Returns: Json
+      }
+      get_organizations_by_type: {
+        Args: { org_type: Database["public"]["Enums"]["organization_type"] }
+        Returns: {
+          created_at: string | null
+          dean_id: string | null
+          description: string | null
+          founded_year: number | null
+          head_id: string | null
+          id: string
+          location: string | null
+          mission: string | null
+          name: string
+          parent_organization_id: string | null
+          short_name: string
+          type: Database["public"]["Enums"]["organization_type"]
+          updated_at: string | null
+          vision: string | null
+          website: string | null
+        }[]
       }
       get_user_managed_center: {
         Args: { user_id?: string }
@@ -456,6 +522,7 @@ export type Database = {
       }
     }
     Enums: {
+      organization_type: "faculty" | "department" | "center"
       request_status:
         | "draft"
         | "submitted"
@@ -587,6 +654,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      organization_type: ["faculty", "department", "center"],
       request_status: [
         "draft",
         "submitted",

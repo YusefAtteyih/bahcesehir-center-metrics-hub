@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useCenters } from '@/hooks/useSupabaseData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const kpiSchema = z.object({
-  center_id: z.string().min(1, 'Center is required'),
+  organization_id: z.string().min(1, 'Organization is required'),
   name: z.string().min(1, 'KPI name is required'),
   target_value: z.number().min(0, 'Target value must be positive'),
   current_value: z.number().min(0, 'Current value must be positive'),
@@ -52,12 +51,12 @@ const KpiCreationForm: React.FC<KpiCreationFormProps> = ({
   isEditing = false,
   kpiId 
 }) => {
-  const { data: centers = [], isLoading: centersLoading } = useCenters();
+  const { data: organizations = [], isLoading: organizationsLoading } = useOrganizations();
   
   const form = useForm<KpiFormData>({
     resolver: zodResolver(kpiSchema),
     defaultValues: {
-      center_id: initialData?.center_id || '',
+      organization_id: initialData?.organization_id || '',
       name: initialData?.name || '',
       target_value: initialData?.target_value || 0,
       current_value: initialData?.current_value || 0,
@@ -83,9 +82,8 @@ const KpiCreationForm: React.FC<KpiCreationFormProps> = ({
           description: "KPI updated successfully.",
         });
       } else {
-        // Fix: Pass data directly, not as an array, and ensure all required fields are present
         const insertData = {
-          center_id: data.center_id,
+          organization_id: data.organization_id,
           name: data.name,
           target_value: data.target_value,
           current_value: data.current_value,
@@ -119,8 +117,8 @@ const KpiCreationForm: React.FC<KpiCreationFormProps> = ({
     }
   };
 
-  if (centersLoading) {
-    return <div>Loading centers...</div>;
+  if (organizationsLoading) {
+    return <div>Loading organizations...</div>;
   }
 
   return (
@@ -137,20 +135,20 @@ const KpiCreationForm: React.FC<KpiCreationFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="center_id"
+                name="organization_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Research Center</FormLabel>
+                    <FormLabel>Organization</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a center" />
+                          <SelectValue placeholder="Select an organization" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {centers.map((center) => (
-                          <SelectItem key={center.id} value={center.id}>
-                            {center.name} ({center.short_name})
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name} ({org.short_name}) - {org.type}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -1,76 +1,40 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { OrganizationSummary, OrganizationChildPerformance } from '@/types/organization';
 
-interface FacultyKpiSummary {
-  total_departments: number;
-  total_centers: number;
-  total_kpis: number;
-  on_target_kpis: number;
-  average_performance: number;
-  performance_status: 'excellent' | 'good' | 'average' | 'needs-improvement';
-}
-
-interface DepartmentKpiSummary {
-  total_centers: number;
-  total_kpis: number;
-  on_target_kpis: number;
-  average_performance: number;
-  research_output: number;
-  performance_status: 'excellent' | 'good' | 'average' | 'needs-improvement';
-}
-
-interface DepartmentPerformance {
-  department_id: string;
-  department_name: string;
-  department_short_name: string;
-  centers_count: number;
-  kpis_count: number;
-  average_performance: number;
-  performance_status: 'excellent' | 'good' | 'average' | 'needs-improvement';
-}
-
-export const useFacultyKpiSummary = (facultyId: string) => {
+// Use the new organization summary function
+export const useOrganizationKpiSummary = (organizationId: string) => {
   return useQuery({
-    queryKey: ['faculty-kpi-summary', facultyId],
-    queryFn: async (): Promise<FacultyKpiSummary> => {
-      const { data, error } = await supabase.rpc('get_faculty_kpi_summary', {
-        faculty_id_param: facultyId
+    queryKey: ['organization-kpi-summary', organizationId],
+    queryFn: async (): Promise<OrganizationSummary> => {
+      const { data, error } = await supabase.rpc('get_organization_kpi_summary', {
+        organization_id_param: organizationId
       });
       
       if (error) throw error;
-      return data as unknown as FacultyKpiSummary;
+      return data as OrganizationSummary;
     },
-    enabled: !!facultyId
+    enabled: !!organizationId
   });
 };
 
-export const useDepartmentKpiSummary = (departmentId: string) => {
+export const useOrganizationChildrenPerformance = (organizationId: string) => {
   return useQuery({
-    queryKey: ['department-kpi-summary', departmentId],
-    queryFn: async (): Promise<DepartmentKpiSummary> => {
-      const { data, error } = await supabase.rpc('get_department_kpi_summary', {
-        department_id_param: departmentId
+    queryKey: ['organization-children-performance', organizationId],
+    queryFn: async (): Promise<OrganizationChildPerformance[]> => {
+      const { data, error } = await supabase.rpc('get_organization_children_performance', {
+        organization_id_param: organizationId
       });
       
       if (error) throw error;
-      return data as unknown as DepartmentKpiSummary;
+      return data as OrganizationChildPerformance[];
     },
-    enabled: !!departmentId
+    enabled: !!organizationId
   });
 };
 
-export const useFacultyDepartmentsPerformance = (facultyId: string) => {
-  return useQuery({
-    queryKey: ['faculty-departments-performance', facultyId],
-    queryFn: async (): Promise<DepartmentPerformance[]> => {
-      const { data, error } = await supabase.rpc('get_faculty_departments_performance', {
-        faculty_id_param: facultyId
-      });
-      
-      if (error) throw error;
-      return data as DepartmentPerformance[];
-    },
-    enabled: !!facultyId
-  });
-};
+// Legacy hooks for backward compatibility
+export const useFacultyKpiSummary = (facultyId: string) => useOrganizationKpiSummary(facultyId);
+export const useDepartmentKpiSummary = (departmentId: string) => useOrganizationKpiSummary(departmentId);
+export const useFacultyDepartmentsPerformance = (facultyId: string) => useOrganizationChildrenPerformance(facultyId);
