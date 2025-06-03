@@ -83,9 +83,21 @@ const KpiCreationForm: React.FC<KpiCreationFormProps> = ({
           description: "KPI updated successfully.",
         });
       } else {
+        // Fix: Pass data directly, not as an array, and ensure all required fields are present
+        const insertData = {
+          center_id: data.center_id,
+          name: data.name,
+          target_value: data.target_value,
+          current_value: data.current_value,
+          unit: data.unit || null,
+          category: data.category,
+          measurement: data.measurement || null,
+          why_it_matters: data.why_it_matters || null,
+        };
+
         const { error } = await supabase
           .from('kpis')
-          .insert([data]);
+          .insert(insertData);
         
         if (error) throw error;
         
