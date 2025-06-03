@@ -73,11 +73,17 @@ export const useAuth = () => {
     
     try {
       // First, try to fetch existing profile
+      console.log('useAuth - Attempting to fetch profile...');
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
+
+      console.log('useAuth - Profile fetch result:', { 
+        hasProfile: !!existingProfile, 
+        error: fetchError?.message 
+      });
 
       if (fetchError) {
         console.error('useAuth - Error fetching profile:', fetchError);
@@ -110,12 +116,15 @@ export const useAuth = () => {
     
     try {
       // Use the manual profile creation function as fallback
+      console.log('useAuth - Calling create_user_profile function...');
       const { data, error } = await supabase.rpc('create_user_profile', {
         user_id: user.id,
         user_email: user.email || '',
         user_full_name: user.user_metadata?.full_name || 'New User',
-        user_role: (user.user_metadata?.role as 'evaluator' | 'manager') || 'manager'
+        user_role: (user.user_metadata?.role as 'evaluator' | 'manager' | 'faculty_dean' | 'department_head') || 'manager'
       });
+
+      console.log('useAuth - Profile creation result:', { success: data, error: error?.message });
 
       if (error) {
         console.error('useAuth - Manual profile creation failed:', error);
@@ -127,11 +136,17 @@ export const useAuth = () => {
       }
 
       // Fetch the newly created profile
+      console.log('useAuth - Fetching newly created profile...');
       const { data: newProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
+
+      console.log('useAuth - New profile fetch result:', { 
+        hasProfile: !!newProfile, 
+        error: fetchError?.message 
+      });
 
       if (fetchError || !newProfile) {
         console.error('useAuth - Failed to fetch newly created profile:', fetchError);
@@ -188,7 +203,7 @@ export const useAuth = () => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'evaluator' | 'manager' = 'manager') => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'evaluator' | 'manager' | 'faculty_dean' | 'department_head' = 'manager') => {
     console.log('useAuth - Attempting sign up for:', email, 'with role:', role);
     setLoading(true);
     setError(null);
@@ -265,6 +280,7 @@ export const useAuth = () => {
     }
     
     console.log('useAuth - Retrying profile creation for user:', user.id);
+    setError(null);
     await handleUserProfile(user);
   };
 
