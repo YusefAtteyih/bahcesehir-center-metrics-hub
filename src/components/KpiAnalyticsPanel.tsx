@@ -51,7 +51,7 @@ const KpiAnalyticsPanel: React.FC<KpiAnalyticsPanelProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.entries(categoryStats).map(([category, stats]) => {
+            {Object.entries(categoryStats).map(([category, stats]: [string, CategoryStats]) => {
               const avgPerformance = stats.totalPerformance / stats.count;
               
               return (
