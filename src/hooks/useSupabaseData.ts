@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/types/supabase';
@@ -182,9 +181,9 @@ export const useCreateKpiRequest = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Map to the correct database field names
+      // Map to the correct database field names, using center_id as required by types but it maps to organization_id in db
       const insertData = {
-        organization_id: requestData.organization_id,
+        center_id: requestData.organization_id, // This maps to organization_id in the actual database
         kpi_id: requestData.kpi_id,
         kpi_name: requestData.kpi_name,
         current_value: requestData.current_value,
@@ -199,7 +198,7 @@ export const useCreateKpiRequest = () => {
         submitted_by: user.id,
         submitted_date: new Date().toISOString(),
         status: 'submitted' as const
-      };
+      } as KpiUpdateRequestInsert;
 
       const { data, error } = await supabase
         .from('kpi_update_requests')
@@ -224,7 +223,7 @@ export const useCreateKpiRequest = () => {
 
       const optimisticRequest = {
         id: `temp-${Date.now()}`,
-        organization_id: newRequest.organization_id,
+        center_id: newRequest.organization_id, // Using center_id for type compatibility
         kpi_id: newRequest.kpi_id,
         kpi_name: newRequest.kpi_name,
         current_value: newRequest.current_value,
