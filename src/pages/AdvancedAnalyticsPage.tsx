@@ -1,14 +1,15 @@
 
 import React from 'react';
 import AdvancedAnalytics from '@/components/AdvancedAnalytics';
-import { useAllKpis, useCenters } from '@/hooks/useSupabaseData';
+import { useAllKpis, useCenters, useDepartments } from '@/hooks/useSupabaseData';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AdvancedAnalyticsPage: React.FC = () => {
   const { data: kpis, isLoading: kpisLoading } = useAllKpis();
   const { data: centers, isLoading: centersLoading } = useCenters();
+  const { data: departments, isLoading: departmentsLoading } = useDepartments();
 
-  if (kpisLoading || centersLoading) {
+  if (kpisLoading || centersLoading || departmentsLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-12 w-96" />
@@ -23,9 +24,10 @@ const AdvancedAnalyticsPage: React.FC = () => {
   }
 
   return (
-    <AdvancedAnalytics 
-      kpis={kpis || []} 
-      centers={centers || []} 
+    <AdvancedAnalytics
+      kpis={kpis || []}
+      centers={centers || []}
+      departments={departments || []}
     />
   );
 };

@@ -1,15 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import OrganizationCard from '@/components/OrganizationCard';
 import { Input } from '@/components/ui/input';
-import { Search, ListFilter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
-import { useDepartments } from '@/hooks/useSupabaseData';
+import { useDepartments, useFaculties } from '@/hooks/useSupabaseData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 const DepartmentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFaculty, setSelectedFaculty] = useState('all');
   const { userRole } = useUser();
-  const { data: departments, isLoading, error } = useDepartments();
+  const { data: faculties = [] } = useFaculties();
+  const { data: departments, isLoading, error } = useDepartments(
+    selectedFaculty === 'all' ? undefined : selectedFaculty
+  );
 
   const filteredDepartments = useMemo(() => {
     if (!departments || !searchQuery.trim()) return departments || [];
@@ -61,10 +72,22 @@ const DepartmentsPage: React.FC = () => {
               className="pl-9 w-full sm:w-64"
             />
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <ListFilter size={16} />
-            <span>Filter</span>
-          </Button>
+          <Select
+            value={selectedFaculty}
+            onValueChange={setSelectedFaculty}
+          >
+            <SelectTrigger className="sm:w-48 w-full">
+              <SelectValue placeholder="Filter by faculty" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Faculties</SelectItem>
+              {faculties.map((fac) => (
+                <SelectItem key={fac.id} value={fac.id}>
+                  {fac.short_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

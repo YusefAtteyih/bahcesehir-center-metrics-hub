@@ -11,16 +11,25 @@ import { TrendingUp, TrendingDown, Target, Users, BarChart3, Activity, Download,
 interface AdvancedAnalyticsProps {
   kpis: any[];
   centers: any[];
+  departments: any[];
 }
 
-const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) => {
+const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers, departments }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('6months');
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedCenter, setSelectedCenter] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const filteredCenters =
+    selectedDepartment === 'all'
+      ? centers
+      : centers.filter((c) => c.parent_organization_id === selectedDepartment);
 
   // Process data for analytics
   const getPerformanceData = () => {
     const filteredKpis = kpis.filter(kpi => {
+      const center = centers.find(c => c.id === kpi.center_id);
+      if (selectedDepartment !== 'all' && center?.parent_organization_id !== selectedDepartment) return false;
       if (selectedCenter !== 'all' && kpi.center_id !== selectedCenter) return false;
       if (selectedCategory !== 'all' && kpi.category !== selectedCategory) return false;
       return true;
@@ -38,6 +47,10 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
 
   const getCategoryBreakdown = () => {
     const categories = kpis.reduce((acc: Record<string, { total: number; onTarget: number }>, kpi) => {
+      const center = centers.find(c => c.id === kpi.center_id);
+      if (selectedDepartment !== 'all' && center?.parent_organization_id !== selectedDepartment) {
+        return acc;
+      }
       const category = kpi.category || 'Uncategorized';
       if (!acc[category]) {
         acc[category] = { total: 0, onTarget: 0 };
@@ -58,9 +71,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
   };
 
   const getCenterComparison = () => {
-    const centerStats = centers.map(center => {
+    const centerStats = filteredCenters.map(center => {
       const centerKpis = kpis.filter(kpi => kpi.center_id === center.id);
-      const avgPerformance = centerKpis.length > 0 
+      const avgPerformance = centerKpis.length > 0
         ? Math.round(centerKpis.reduce((acc, kpi) => acc + (Number(kpi.current_value) / Number(kpi.target_value)) * 100, 0) / centerKpis.length)
         : 0;
       
@@ -109,7 +122,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
     const exportObj = {
       summary: {
         totalKpis: kpis.length,
-        centers: centers.length,
+        centers: filteredCenters.length,
         avgPerformance: Math.round(kpis.reduce((acc, kpi) => acc + (Number(kpi.current_value) / Number(kpi.target_value)) * 100, 0) / kpis.length)
       },
       performance: performanceData,
@@ -217,13 +230,24 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ kpis, centers }) 
 
         <TabsContent value="performance" className="space-y-6">
           <div className="flex gap-4 items-center">
+            <Select value={selectedDepartment} onValueChange={(val) => { setSelectedDepartment(val); setSelectedCenter('all'); }}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept.id} value={dept.id}>{dept.short_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={selectedCenter} onValueChange={setSelectedCenter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by center" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Centers</SelectItem>
-                {centers.map(center => (
+                {filteredCenters.map(center => (
                   <SelectItem key={center.id} value={center.id}>{center.short_name}</SelectItem>
                 ))}
               </SelectContent>

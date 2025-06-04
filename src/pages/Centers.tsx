@@ -2,15 +2,26 @@
 import React, { useState, useMemo } from 'react';
 import CenterCard from '@/components/CenterCard';
 import { Input } from '@/components/ui/input';
-import { Search, ListFilter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
-import { useCenters } from '@/hooks/useSupabaseData';
+import { useCenters, useDepartments } from '@/hooks/useSupabaseData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 const CentersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
   const { userRole } = useUser();
-  const { data: centers, isLoading, error } = useCenters();
+  const { data: departments = [] } = useDepartments();
+  const { data: centers, isLoading, error } = useCenters(
+    selectedDepartment === 'all' ? undefined : selectedDepartment
+  );
   
   const filteredCenters = useMemo(() => {
     if (!centers || !searchQuery.trim()) return centers || [];
@@ -64,10 +75,22 @@ const CentersPage: React.FC = () => {
               className="pl-9 w-full sm:w-64"
             />
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <ListFilter size={16} />
-            <span>Filter</span>
-          </Button>
+          <Select
+            value={selectedDepartment}
+            onValueChange={setSelectedDepartment}
+          >
+            <SelectTrigger className="sm:w-48 w-full">
+              <SelectValue placeholder="Filter by department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.short_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
