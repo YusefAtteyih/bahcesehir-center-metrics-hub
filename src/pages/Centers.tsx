@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Search, ListFilter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
-import { useCenters } from '@/hooks/useSupabaseData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 const CentersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { userRole } = useUser();
-  const { data: centers, isLoading, error } = useCenters();
+  const { data: centers, isLoading, error } = useOrganizations('center');
   
   const filteredCenters = useMemo(() => {
     if (!centers || !searchQuery.trim()) return centers || [];

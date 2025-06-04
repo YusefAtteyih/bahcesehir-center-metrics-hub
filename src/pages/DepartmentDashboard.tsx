@@ -13,8 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const DepartmentDashboard: React.FC = () => {
   const { profile } = useAuth();
-  // Use the appropriate field for department heads
-  const departmentId = profile?.managed_department_id;
+  // Use the new unified field for organization management
+  const departmentId = profile?.managed_organization_id;
   
   console.log('DepartmentDashboard - Profile:', profile);
   console.log('DepartmentDashboard - Department ID:', departmentId);

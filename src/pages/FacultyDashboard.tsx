@@ -13,8 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const FacultyDashboard: React.FC = () => {
   const { profile } = useAuth();
-  // Use the appropriate field for faculty deans
-  const facultyId = profile?.managed_faculty_id;
+  // Use the new unified field for organization management
+  const facultyId = profile?.managed_organization_id;
   
   const { data: faculty, isLoading: facultyLoading } = useFaculty(facultyId || '');
   const { data: kpiSummary, isLoading: kpiLoading } = useOrganizationSummary(facultyId || '');
