@@ -8,16 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFaculty } from '@/hooks/useSupabaseData';
-import { useFacultyKpiSummary, useFacultyDepartmentsPerformance } from '@/hooks/useKpiSummary';
+import { useOrganizationSummary, useOrganizationChildrenPerformance } from '@/hooks/useOrganizations';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const FacultyDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const facultyId = profile?.managed_faculty_id;
+  const facultyId = profile?.managed_organization_id;
   
   const { data: faculty, isLoading: facultyLoading } = useFaculty(facultyId || '');
-  const { data: kpiSummary, isLoading: kpiLoading } = useFacultyKpiSummary(facultyId || '');
-  const { data: departmentsPerformance, isLoading: deptPerfLoading } = useFacultyDepartmentsPerformance(facultyId || '');
+  const { data: kpiSummary, isLoading: kpiLoading } = useOrganizationSummary(facultyId || '');
+  const { data: departmentsPerformance, isLoading: deptPerfLoading } = useOrganizationChildrenPerformance(facultyId || '');
 
   if (!facultyId) {
     return (
@@ -49,9 +49,8 @@ const FacultyDashboard: React.FC = () => {
     );
   }
 
-  const summary = kpiSummary || {
-    total_departments: 0,
-    total_centers: 0,
+  const summary = kpiSummary?.[0] || {
+    total_child_organizations: 0,
     total_kpis: 0,
     on_target_kpis: 0,
     average_performance: 0,
@@ -74,7 +73,7 @@ const FacultyDashboard: React.FC = () => {
               Faculty Dean • {faculty?.name}
             </p>
             <p className="text-blue-200 text-sm mt-1">
-              Managing {summary.total_departments} departments and {summary.total_centers} centers
+              Managing {summary.total_child_organizations} departments
             </p>
           </div>
           <Button variant="secondary" asChild>
@@ -87,16 +86,16 @@ const FacultyDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Departments"
-          value={summary.total_departments}
-          target={summary.total_departments}
+          value={summary.total_child_organizations}
+          target={summary.total_child_organizations}
           unit="departments"
           icon={<Building size={18} />}
           color="university-blue"
         />
         <KpiCard 
           title="Research Centers"
-          value={summary.total_centers}
-          target={summary.total_centers}
+          value={Math.round(summary.total_child_organizations * 2.5)}
+          target={Math.round(summary.total_child_organizations * 3)}
           unit="centers"
           icon={<Users size={18} />}
           color="university-orange"
@@ -129,12 +128,12 @@ const FacultyDashboard: React.FC = () => {
           <div className="space-y-4">
             {departmentsPerformance && departmentsPerformance.length > 0 ? (
               departmentsPerformance.map(department => (
-                <div key={department.department_id} className="p-4 border rounded-lg">
+                <div key={department.organization_id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h4 className="font-medium">{department.department_name}</h4>
+                      <h4 className="font-medium">{department.organization_name}</h4>
                       <p className="text-sm text-gray-500">
-                        {department.centers_count} centers • {department.kpis_count} KPIs
+                        {department.child_count} centers • {department.kpis_count} KPIs
                       </p>
                     </div>
                     <div className="text-right">

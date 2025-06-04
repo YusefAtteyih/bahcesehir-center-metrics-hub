@@ -8,19 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDepartment, useCenters } from '@/hooks/useSupabaseData';
-import { useDepartmentKpiSummary } from '@/hooks/useKpiSummary';
+import { useOrganizationSummary } from '@/hooks/useOrganizations';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const DepartmentDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const departmentId = profile?.managed_department_id;
+  const departmentId = profile?.managed_organization_id;
   
   console.log('DepartmentDashboard - Profile:', profile);
   console.log('DepartmentDashboard - Department ID:', departmentId);
   
   const { data: department, isLoading: departmentLoading } = useDepartment(departmentId || '');
   const { data: centers, isLoading: centersLoading } = useCenters(departmentId);
-  const { data: kpiSummary, isLoading: kpiLoading } = useDepartmentKpiSummary(departmentId || '');
+  const { data: kpiSummary, isLoading: kpiLoading } = useOrganizationSummary(departmentId || '');
 
   console.log('DepartmentDashboard - Department loading:', departmentLoading);
   console.log('DepartmentDashboard - Centers loading:', centersLoading);
@@ -60,14 +60,16 @@ const DepartmentDashboard: React.FC = () => {
   }
 
   const departmentCenters = centers || [];
-  const summary = kpiSummary || {
-    total_centers: 0,
+  const summary = kpiSummary?.[0] || {
+    total_child_organizations: 0,
     total_kpis: 0,
     on_target_kpis: 0,
     average_performance: 0,
-    research_output: 0,
     performance_status: 'needs-improvement' as const
   };
+
+  // Get parent organization name for display
+  const parentOrgName = department?.parent_organization?.[0]?.name || 'Faculty';
 
   // Calculate active projects estimate (using total KPIs as proxy)
   const activeProjects = Math.round(summary.total_kpis * 0.8);
@@ -85,7 +87,7 @@ const DepartmentDashboard: React.FC = () => {
               Department Head • {department?.name || 'Department'}
             </p>
             <p className="text-blue-200 text-sm mt-1">
-              {department?.faculties?.name} • Managing {summary.total_centers} centers
+              {parentOrgName} • Managing {summary.total_child_organizations} centers
             </p>
           </div>
           <Button variant="secondary" asChild>
@@ -98,8 +100,8 @@ const DepartmentDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Research Centers"
-          value={summary.total_centers}
-          target={summary.total_centers}
+          value={summary.total_child_organizations}
+          target={summary.total_child_organizations}
           unit="centers"
           icon={<Users size={18} />}
           color="university-blue"
@@ -122,9 +124,9 @@ const DepartmentDashboard: React.FC = () => {
         />
         <KpiCard 
           title="Research Output"
-          value={summary.research_output}
-          target={summary.research_output + 50}
-          unit="publications"
+          value={summary.on_target_kpis}
+          target={summary.total_kpis}
+          unit="on target"
           icon={<TrendingUp size={18} />}
           color="purple-500"
         />

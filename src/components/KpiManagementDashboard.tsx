@@ -230,7 +230,7 @@ const KpiManagementDashboard: React.FC = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search KPIs or centers..."
+                placeholder="Search KPIs or organizations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -259,6 +259,7 @@ const KpiManagementDashboard: React.FC = () => {
                 {filteredKpis.length > 0 ? filteredKpis.map(kpi => {
                   const performance = (Number(kpi.current_value) / Number(kpi.target_value)) * 100;
                   const status = getPerformanceStatus(Number(kpi.current_value), Number(kpi.target_value));
+                  const organization = organizationsList.find(org => org.id === kpi.organization_id);
                   
                   return (
                     <div key={kpi.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50">
@@ -271,7 +272,7 @@ const KpiManagementDashboard: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">{kpi.name}</span>
-                          <Badge variant="outline">{kpi.centers?.short_name}</Badge>
+                          <Badge variant="outline">{organization?.short_name}</Badge>
                           {kpi.category && (
                             <Badge variant="secondary" className="text-xs">{kpi.category}</Badge>
                           )}

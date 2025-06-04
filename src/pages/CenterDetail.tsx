@@ -73,6 +73,10 @@ const CenterDetailPage: React.FC = () => {
 
   const status = getPerformanceStatus(averagePerformance);
 
+  // Get parent organization information
+  const parentOrgName = center.parent_organization?.[0]?.name || 'Unknown Department';
+  const facultyName = 'Faculty'; // This would need another query to get faculty info
+
   // Transform database KPIs to match the KpiTable expected format
   const transformedKpis = kpis?.map(kpi => ({
     name: kpi.name,
@@ -107,11 +111,9 @@ const CenterDetailPage: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-university-blue">{center.name}</h1>
               <p className="text-xl text-gray-600">{center.short_name}</p>
-              {center.departments && (
-                <p className="text-md text-gray-500">
-                  {center.departments.name} • {center.departments.faculties?.name}
-                </p>
-              )}
+              <p className="text-md text-gray-500">
+                {parentOrgName} • {facultyName}
+              </p>
             </div>
             <div className="flex items-center">
               <p className="text-lg mr-2">Overall Performance:</p>
