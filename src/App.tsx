@@ -10,6 +10,8 @@ import { useAuth } from "./hooks/useAuth";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 import CentersPage from "./pages/Centers";
+import DepartmentsPage from "./pages/DepartmentsPage";
+import FacultiesPage from "./pages/FacultiesPage";
 import CenterDetailPage from "./pages/CenterDetail";
 import CenterProfilePage from "./pages/CenterProfile";
 import ManagerDashboard from "./pages/ManagerDashboard";
@@ -84,8 +86,8 @@ const AppRoutes = () => {
         {/* Evaluator specific routes - comprehensive access */}
         {userRole === 'evaluator' && (
           <>
-            <Route path="departments" element={<CentersPage />} />
-            <Route path="faculties" element={<CentersPage />} />
+            <Route path="departments" element={<DepartmentsPage />} />
+            <Route path="faculties" element={<FacultiesPage />} />
             <Route path="reports" element={<ReportsHub />} />
             <Route path="reports/:reportId/review" element={<ReportReview />} />
             <Route path="kpi-approvals" element={<KpiApprovals />} />
@@ -101,7 +103,7 @@ const AppRoutes = () => {
         {/* Faculty Dean specific routes */}
         {userRole === 'faculty_dean' && (
           <>
-            <Route path="departments" element={<CentersPage />} />
+            <Route path="departments" element={<DepartmentsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="reports" element={<ReportsHub />} />
             <Route path="kpi-approvals" element={<KpiApprovals />} />
