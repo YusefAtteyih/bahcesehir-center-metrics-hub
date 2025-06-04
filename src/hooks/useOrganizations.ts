@@ -142,7 +142,7 @@ export const useCreateOrganization = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (organization: Partial<Organization>) => {
+    mutationFn: async (organization: Omit<Organization, 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('organizations')
         .insert(organization)

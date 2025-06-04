@@ -8,7 +8,7 @@ import { useOptimizedKpiManagement } from '@/hooks/useOptimizedKpiManagement';
 
 const PerformanceMetrics: React.FC = () => {
   const { kpiRequests, getRequestStats, isLoading } = useOptimizedKpiManagement();
-  const stats = getRequestStats;
+  const stats = getRequestStats();
 
   // Memoized calculations for performance metrics
   const metrics = useMemo(() => {
@@ -46,8 +46,8 @@ const PerformanceMetrics: React.FC = () => {
     const getBottleneckAnalysis = () => {
       const statusCounts = {
         'submitted': stats.pending,
-        'under-review': stats.underReview,
-        'revision-requested': stats.needingRevision,
+        'under-review': stats.underReview || 0,
+        'revision-requested': stats.needingRevision || 0,
       };
 
       const maxStatus = Object.entries(statusCounts).reduce((a, b) => 
@@ -167,11 +167,11 @@ const PerformanceMetrics: React.FC = () => {
               <div className="text-sm text-green-700">Approved This Period</div>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.pending + stats.underReview}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.pending + (stats.underReview || 0)}</div>
               <div className="text-sm text-blue-700">In Progress</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{stats.needingRevision}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats.needingRevision || 0}</div>
               <div className="text-sm text-orange-700">Needs Attention</div>
             </div>
           </div>

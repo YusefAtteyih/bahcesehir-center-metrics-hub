@@ -176,8 +176,8 @@ const KpiManagementDashboard: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-orange-500" />
                   <div>
-                    <div className="text-2xl font-bold">{analytics.centerCount}</div>
-                    <div className="text-sm text-gray-600">Active Centers</div>
+                    <div className="text-2xl font-bold">{analytics.organizationCount}</div>
+                    <div className="text-sm text-gray-600">Organizations</div>
                   </div>
                 </div>
               </CardContent>
@@ -187,13 +187,14 @@ const KpiManagementDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>KPI Performance Overview</CardTitle>
-              <CardDescription>Quick overview of all KPIs across centers</CardDescription>
+              <CardDescription>Quick overview of all KPIs across organizations</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {kpis.slice(0, 10).map(kpi => {
                   const performance = (Number(kpi.current_value) / Number(kpi.target_value)) * 100;
                   const status = getPerformanceStatus(Number(kpi.current_value), Number(kpi.target_value));
+                  const organization = organizationsList.find(org => org.id === kpi.organization_id);
                   
                   return (
                     <div key={kpi.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -201,7 +202,7 @@ const KpiManagementDashboard: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{kpi.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            {kpi.centers?.short_name}
+                            {organization?.short_name}
                           </Badge>
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
@@ -315,7 +316,6 @@ const KpiManagementDashboard: React.FC = () => {
       <KpiCreationModal 
         open={showCreateModal} 
         onOpenChange={setShowCreateModal}
-        centers={organizationsList}
       />
     </div>
   );

@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, ScatterChart, Scatter } from 'recharts';
 import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Download, Filter } from 'lucide-react';
-import { useAllKpis, useCenters, useDepartments, useFaculties } from '@/hooks/useSupabaseData';
+import { useAllKpis } from '@/hooks/useSupabaseData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 const AdvancedKpiAnalytics: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('30');
@@ -15,9 +16,12 @@ const AdvancedKpiAnalytics: React.FC = () => {
   const [selectedComparison, setSelectedComparison] = useState('centers');
 
   const { data: kpis = [] } = useAllKpis();
-  const { data: centers = [] } = useCenters();
-  const { data: departments = [] } = useDepartments();
-  const { data: faculties = [] } = useFaculties();
+  const { data: organizations = [] } = useOrganizations();
+
+  // Filter organizations by type
+  const centers = organizations.filter(org => org.type === 'center');
+  const departments = organizations.filter(org => org.type === 'department');
+  const faculties = organizations.filter(org => org.type === 'faculty');
 
   // Generate performance trend data (simulated)
   const performanceTrendData = useMemo(() => {
@@ -63,25 +67,27 @@ const AdvancedKpiAnalytics: React.FC = () => {
     }));
   }, [kpis]);
 
-  // Center comparison data
-  const centerComparison = useMemo(() => {
-    const centerStats = centers.map(center => {
-      const centerKpis = kpis.filter(kpi => kpi.center_id === center.id);
+  // Organization comparison data
+  const organizationComparison = useMemo(() => {
+    const orgStats = centers.map(center => {
+      const centerKpis = kpis.filter(kpi => kpi.organization_id === center.id);
       const totalPerformance = centerKpis.reduce((sum, kpi) => {
         return sum + (kpi.target_value > 0 ? (kpi.current_value / kpi.target_value) * 100 : 0);
       }, 0);
+      
+      const parentOrg = organizations.find(org => org.id === center.parent_organization_id);
       
       return {
         name: center.short_name,
         fullName: center.name,
         kpiCount: centerKpis.length,
         performance: centerKpis.length > 0 ? Math.round(totalPerformance / centerKpis.length) : 0,
-        department: center.departments?.short_name || 'N/A'
+        department: parentOrg?.short_name || 'N/A'
       };
     }).filter(center => center.kpiCount > 0);
 
-    return centerStats.sort((a, b) => b.performance - a.performance);
-  }, [centers, kpis]);
+    return orgStats.sort((a, b) => b.performance - a.performance);
+  }, [centers, kpis, organizations]);
 
   // Performance distribution
   const performanceDistribution = useMemo(() => {
@@ -103,19 +109,19 @@ const AdvancedKpiAnalytics: React.FC = () => {
 
   // Correlation analysis (KPI count vs Performance)
   const correlationData = useMemo(() => {
-    return centerComparison.map(center => ({
-      x: center.kpiCount,
-      y: center.performance,
-      name: center.name,
-      department: center.department
+    return organizationComparison.map(org => ({
+      x: org.kpiCount,
+      y: org.performance,
+      name: org.name,
+      department: org.department
     }));
-  }, [centerComparison]);
+  }, [organizationComparison]);
 
   const exportAnalytics = () => {
     const data = {
       performanceTrend: performanceTrendData,
       categoryPerformance,
-      centerComparison,
+      organizationComparison,
       performanceDistribution,
       generatedAt: new Date().toISOString()
     };
@@ -159,7 +165,7 @@ const AdvancedKpiAnalytics: React.FC = () => {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="trends">Performance Trends</TabsTrigger>
           <TabsTrigger value="categories">Category Analysis</TabsTrigger>
-          <TabsTrigger value="comparison">Center Comparison</TabsTrigger>
+          <TabsTrigger value="comparison">Organization Comparison</TabsTrigger>
           <TabsTrigger value="distribution">Distribution</TabsTrigger>
         </TabsList>
 
@@ -288,13 +294,13 @@ const AdvancedKpiAnalytics: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Center Performance Ranking</CardTitle>
+                <CardTitle>Organization Performance Ranking</CardTitle>
                 <CardDescription>Performance comparison across research centers</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={centerComparison.slice(0, 10)} layout="horizontal">
+                    <BarChart data={organizationComparison.slice(0, 10)} layout="horizontal">
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" />
                       <YAxis dataKey="name" type="category" width={60} />
