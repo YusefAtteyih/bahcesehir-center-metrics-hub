@@ -182,8 +182,9 @@ export const useCreateKpiRequest = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
+      // Use center_id as that's what the database expects
       const insertData: KpiUpdateRequestInsert = {
-        organization_id: requestData.organization_id!,
+        center_id: requestData.center_id!,
         kpi_id: requestData.kpi_id!,
         kpi_name: requestData.kpi_name!,
         current_value: requestData.current_value!,
@@ -223,7 +224,7 @@ export const useCreateKpiRequest = () => {
 
       const optimisticRequest = {
         id: `temp-${Date.now()}`,
-        organization_id: newRequest.organization_id!,
+        center_id: newRequest.center_id!,
         kpi_id: newRequest.kpi_id!,
         kpi_name: newRequest.kpi_name!,
         current_value: newRequest.current_value!,

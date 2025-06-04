@@ -13,7 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const FacultyDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const facultyId = profile?.managed_organization_id;
+  // Use the appropriate field for faculty deans
+  const facultyId = profile?.managed_faculty_id;
   
   const { data: faculty, isLoading: facultyLoading } = useFaculty(facultyId || '');
   const { data: kpiSummary, isLoading: kpiLoading } = useOrganizationSummary(facultyId || '');
@@ -49,7 +50,7 @@ const FacultyDashboard: React.FC = () => {
     );
   }
 
-  const summary = kpiSummary?.[0] || {
+  const summary = kpiSummary || {
     total_child_organizations: 0,
     total_kpis: 0,
     on_target_kpis: 0,

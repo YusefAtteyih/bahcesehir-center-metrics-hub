@@ -13,7 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const DepartmentDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const departmentId = profile?.managed_organization_id;
+  // Use the appropriate field for department heads
+  const departmentId = profile?.managed_department_id;
   
   console.log('DepartmentDashboard - Profile:', profile);
   console.log('DepartmentDashboard - Department ID:', departmentId);
@@ -60,7 +61,7 @@ const DepartmentDashboard: React.FC = () => {
   }
 
   const departmentCenters = centers || [];
-  const summary = kpiSummary?.[0] || {
+  const summary = kpiSummary || {
     total_child_organizations: 0,
     total_kpis: 0,
     on_target_kpis: 0,

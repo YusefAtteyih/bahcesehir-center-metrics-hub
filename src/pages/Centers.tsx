@@ -19,8 +19,7 @@ const CentersPage: React.FC = () => {
     return centers.filter(center => 
       center.name.toLowerCase().includes(query) || 
       center.short_name.toLowerCase().includes(query) ||
-      (center.description && center.description.toLowerCase().includes(query)) ||
-      (center.parent_organization && center.parent_organization[0]?.name.toLowerCase().includes(query))
+      (center.description && center.description.toLowerCase().includes(query))
     );
   }, [centers, searchQuery]);
 

@@ -10,6 +10,11 @@ interface KpiAnalyticsPanelProps {
   centers: any[];
 }
 
+interface CategoryStats {
+  count: number;
+  totalPerformance: number;
+}
+
 const KpiAnalyticsPanel: React.FC<KpiAnalyticsPanelProps> = ({ 
   kpis, 
   centers 
@@ -19,7 +24,7 @@ const KpiAnalyticsPanel: React.FC<KpiAnalyticsPanelProps> = ({
     return Math.min((current / target) * 100, 100);
   };
 
-  const categoryStats = kpis.reduce((acc, kpi) => {
+  const categoryStats = kpis.reduce((acc: Record<string, CategoryStats>, kpi) => {
     if (!kpi.category) return acc;
     
     if (!acc[kpi.category]) {
@@ -30,7 +35,7 @@ const KpiAnalyticsPanel: React.FC<KpiAnalyticsPanelProps> = ({
     acc[kpi.category].totalPerformance += getPerformanceScore(kpi.current_value, kpi.target_value);
     
     return acc;
-  }, {} as Record<string, { count: number; totalPerformance: number }>);
+  }, {});
 
   return (
     <div className="space-y-6">
