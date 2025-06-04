@@ -6,13 +6,11 @@ import KpiCreationForm from './KpiCreationForm';
 interface KpiCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  centers: any[];
 }
 
 const KpiCreationModal: React.FC<KpiCreationModalProps> = ({ 
   open, 
-  onOpenChange, 
-  centers 
+  onOpenChange
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

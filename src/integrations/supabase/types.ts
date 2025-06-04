@@ -262,10 +262,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "kpis_center_id_fkey"
+            foreignKeyName: "kpis_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "centers"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
