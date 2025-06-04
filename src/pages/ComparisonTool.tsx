@@ -5,12 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { centers } from '@/data/centers';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Check, Plus, X, Download, Search, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const ComparisonTool: React.FC = () => {
-  const [selectedCenters, setSelectedCenters] = useState(centers.slice(0, 3));
+  const { data: centers, isLoading } = useOrganizations('center');
+  const [selectedCenters, setSelectedCenters] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showDetailedView, setShowDetailedView] = useState(false);
@@ -49,14 +50,21 @@ const ComparisonTool: React.FC = () => {
     }
   ];
 
-  const availableCenters = centers.filter(center => 
+  // Initialize selectedCenters with first 3 centers when data loads
+  React.useEffect(() => {
+    if (centers && centers.length > 0 && selectedCenters.length === 0) {
+      setSelectedCenters(centers.slice(0, 3));
+    }
+  }, [centers, selectedCenters.length]);
+
+  const availableCenters = (centers || []).filter(center => 
     !selectedCenters.find(selected => selected.id === center.id) &&
     (searchTerm === '' || center.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     center.shortName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (categoryFilter === 'all' || center.category === categoryFilter)
+     center.short_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (categoryFilter === 'all' || center.type === categoryFilter)
   );
 
-  const addCenter = (center: typeof centers[0]) => {
+  const addCenter = (center: any) => {
     if (selectedCenters.length < 5) {
       setSelectedCenters([...selectedCenters, center]);
     }
@@ -81,7 +89,7 @@ const ComparisonTool: React.FC = () => {
   const exportComparison = () => {
     // Simulate export functionality
     const data = selectedCenters.map((center, centerIndex) => ({
-      center: center.shortName,
+      center: center.short_name,
       overall: getOverallScore(centerIndex),
       ...comparisonMetrics.reduce((acc, metric, metricIndex) => ({
         ...acc,
@@ -100,7 +108,16 @@ const ComparisonTool: React.FC = () => {
     return 'text-red-600 bg-red-50';
   };
 
-  const categories = [...new Set(centers.map(c => c.category).filter(Boolean))];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-university-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading centers...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -137,7 +154,7 @@ const ComparisonTool: React.FC = () => {
               {selectedCenters.map((center, centerIndex) => (
                 <div key={center.id} className="border rounded-md px-3 py-2 flex items-center gap-2 bg-gray-50">
                   <div className="w-3 h-3 rounded-full bg-university-blue"></div>
-                  <span className="font-medium">{center.shortName}</span>
+                  <span className="font-medium">{center.short_name}</span>
                   <Badge className={getScoreColor(getOverallScore(centerIndex))}>
                     {getOverallScore(centerIndex)}%
                   </Badge>
@@ -179,7 +196,7 @@ const ComparisonTool: React.FC = () => {
                         return (
                           <div key={`${center.id}-${metricIndex}`} className="space-y-1">
                             <div className="flex justify-between">
-                              <span className="text-sm font-medium">{center.shortName}</span>
+                              <span className="text-sm font-medium">{center.short_name}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500">{score}/100</span>
                                 {score > 80 && (
@@ -225,16 +242,12 @@ const ComparisonTool: React.FC = () => {
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <Filter size={16} />
-                    <SelectValue placeholder="Filter by category" />
+                    <SelectValue placeholder="Filter by type" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category!}>
-                      {category}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="center">Research Centers</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -247,13 +260,11 @@ const ComparisonTool: React.FC = () => {
                   onClick={() => addCenter(center)}
                 >
                   <div>
-                    <div className="font-medium text-sm">{center.shortName}</div>
+                    <div className="font-medium text-sm">{center.short_name}</div>
                     <div className="text-xs text-gray-500">{center.name}</div>
-                    {center.category && (
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {center.category}
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="text-xs mt-1">
+                      Research Center
+                    </Badge>
                   </div>
                   <Button size="sm" variant="outline" disabled={selectedCenters.length >= 5}>
                     <Plus size={12} />

@@ -178,27 +178,27 @@ export const useCreateKpiRequest = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (requestData: Partial<KpiUpdateRequestInsert>) => {
+    mutationFn: async (requestData: any) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Use organization_id as that's what the database expects
-      const insertData: KpiUpdateRequestInsert = {
-        organization_id: requestData.organization_id!,
-        kpi_id: requestData.kpi_id!,
-        kpi_name: requestData.kpi_name!,
-        current_value: requestData.current_value!,
-        proposed_value: requestData.proposed_value!,
-        current_target: requestData.current_target!,
+      // Map to the correct database field names
+      const insertData = {
+        organization_id: requestData.organization_id,
+        kpi_id: requestData.kpi_id,
+        kpi_name: requestData.kpi_name,
+        current_value: requestData.current_value,
+        proposed_value: requestData.proposed_value,
+        current_target: requestData.current_target,
         proposed_target: requestData.proposed_target,
-        justification: requestData.justification!,
-        data_source: requestData.data_source!,
-        measurement_period: requestData.measurement_period!,
+        justification: requestData.justification,
+        data_source: requestData.data_source,
+        measurement_period: requestData.measurement_period,
         impact_on_related_kpis: requestData.impact_on_related_kpis,
         supporting_documents: requestData.supporting_documents,
         submitted_by: user.id,
         submitted_date: new Date().toISOString(),
-        status: 'submitted'
+        status: 'submitted' as const
       };
 
       const { data, error } = await supabase
@@ -224,16 +224,16 @@ export const useCreateKpiRequest = () => {
 
       const optimisticRequest = {
         id: `temp-${Date.now()}`,
-        organization_id: newRequest.organization_id!,
-        kpi_id: newRequest.kpi_id!,
-        kpi_name: newRequest.kpi_name!,
-        current_value: newRequest.current_value!,
-        proposed_value: newRequest.proposed_value!,
-        current_target: newRequest.current_target!,
+        organization_id: newRequest.organization_id,
+        kpi_id: newRequest.kpi_id,
+        kpi_name: newRequest.kpi_name,
+        current_value: newRequest.current_value,
+        proposed_value: newRequest.proposed_value,
+        current_target: newRequest.current_target,
         proposed_target: newRequest.proposed_target,
-        justification: newRequest.justification!,
-        data_source: newRequest.data_source!,
-        measurement_period: newRequest.measurement_period!,
+        justification: newRequest.justification,
+        data_source: newRequest.data_source,
+        measurement_period: newRequest.measurement_period,
         impact_on_related_kpis: newRequest.impact_on_related_kpis,
         supporting_documents: newRequest.supporting_documents,
         status: 'submitted' as const,

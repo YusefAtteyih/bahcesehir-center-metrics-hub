@@ -13,8 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const DepartmentDashboard: React.FC = () => {
   const { profile } = useAuth();
-  // Use the new unified field for organization management
-  const departmentId = profile?.managed_organization_id;
+  // Use the legacy field for now until types are updated
+  const departmentId = profile?.managed_department_id;
   
   console.log('DepartmentDashboard - Profile:', profile);
   console.log('DepartmentDashboard - Department ID:', departmentId);
