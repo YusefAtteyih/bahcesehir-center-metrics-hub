@@ -129,7 +129,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-university-blue">Performance Dashboard</h1>
+        <h1 className="text-2xl font-bold text-university-blue">Department Evaluation Dashboard</h1>
         
         <Tabs defaultValue="overview">
           <TabsList>

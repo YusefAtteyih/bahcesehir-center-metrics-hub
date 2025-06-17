@@ -26,10 +26,10 @@ const ManagerDashboard: React.FC = () => {
           <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="h-8 w-8 text-gray-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-600 mb-2">No Center Assigned</h1>
-          <p className="text-gray-500 mb-4">Please contact an administrator to assign you to a center.</p>
+          <h1 className="text-2xl font-bold text-gray-600 mb-2">No Department Assigned</h1>
+          <p className="text-gray-500 mb-4">Please contact an administrator to assign you to a department.</p>
           <Button variant="outline" asChild>
-            <Link to="/centers">Browse Centers</Link>
+            <Link to="/centers">Browse Departments</Link>
           </Button>
         </div>
       </div>
@@ -71,10 +71,10 @@ const ManagerDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">
-              Welcome back, {profile?.full_name}
+              Welcome to Department Evaluation Dashboard
             </h1>
             <p className="text-blue-100 mt-1">
-              Managing {center?.name || 'Your Center'} • {center?.short_name}
+              Managing {center?.name || 'Your Department'} • {center?.short_name}
             </p>
             <p className="text-blue-200 text-sm mt-1">
               {center?.location && `Located in ${center.location}`}
@@ -134,7 +134,7 @@ const ManagerDashboard: React.FC = () => {
               whyItMatters: kpi.why_it_matters || '',
               measurement: kpi.measurement || ''
             }))}
-            title={`${center?.short_name || 'Center'} KPI Performance`}
+            title={`${center?.short_name || 'Department'} KPI Performance`}
             showTrends={true}
           />
         )}
@@ -190,8 +190,8 @@ const ManagerDashboard: React.FC = () => {
       {/* Detailed KPI Performance */}
       <Card>
         <CardHeader>
-          <CardTitle>KPI Performance Details</CardTitle>
-          <CardDescription>Current performance against your center's targets</CardDescription>
+          <CardTitle>Department KPI Performance Details</CardTitle>
+          <CardDescription>Current performance against your department's targets</CardDescription>
         </CardHeader>
         <CardContent>
           {centerKpis.length > 0 ? (
@@ -229,7 +229,7 @@ const ManagerDashboard: React.FC = () => {
             <div className="text-center text-gray-500 py-8">
               <ChartBar className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="font-medium mb-2">No KPIs configured</p>
-              <p className="text-sm mb-4">Your center doesn't have any KPIs set up yet.</p>
+              <p className="text-sm mb-4">Your department doesn't have any KPIs set up yet.</p>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/center-settings">Configure KPIs</Link>
               </Button>
