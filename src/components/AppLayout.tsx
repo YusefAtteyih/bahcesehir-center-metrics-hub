@@ -19,7 +19,7 @@ const AppLayout: React.FC = () => {
             <Outlet />
           </main>
           <footer className="bg-university-blue text-white p-4 text-center">
-            <p>© {new Date().getFullYear()} Bahcesehir University - Center Performance System</p>
+            <p>© {new Date().getFullYear()} Bahcesehir University - Department Evaluation System</p>
           </footer>
         </div>
       </div>

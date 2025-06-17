@@ -13,8 +13,8 @@ const Index: React.FC = () => {
         <div className="container mx-auto py-8 px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-university-blue mb-2">Center Performance Dashboard</h1>
-              <p className="text-gray-600">Monitoring and evaluating performance across all university centers</p>
+              <h1 className="text-3xl font-bold text-university-blue mb-2">Department Evaluation Dashboard</h1>
+              <p className="text-gray-600">Evaluating and monitoring performance across all university departments</p>
             </div>
             <Button asChild className="mt-4 md:mt-0">
               <Link to="/centers">View All Centers</Link>
@@ -24,7 +24,7 @@ const Index: React.FC = () => {
         </div>
       </main>
       <footer className="bg-university-blue text-white p-4 text-center">
-        <p>© {new Date().getFullYear()} Bahcesehir University - Center Performance System</p>
+        <p>© {new Date().getFullYear()} Bahcesehir University - Department Evaluation System</p>
       </footer>
     </div>
   );
